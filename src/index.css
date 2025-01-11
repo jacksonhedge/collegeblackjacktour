@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(1deg);
+  }
+}
+
+@keyframes gradient-xy {
+  0%, 100% {
+    background-position: 0% 0%;
+    background-size: 200% 200%;
+  }
+  25% {
+    background-position: 100% 0%;
+    background-size: 250% 250%;
+  }
+  50% {
+    background-position: 100% 100%;
+    background-size: 200% 200%;
+  }
+  75% {
+    background-position: 0% 100%;
+    background-size: 250% 250%;
+  }
+}
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-100% / 3));
+  }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-gradient-xy {
+  animation: gradient-xy 20s ease infinite;
+  background-size: 200% 200%;
+}
+
+.animate-ticker {
+  animation: ticker 40s linear infinite;
+}
+
+.ticker-container {
+  width: 100%;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 15%,
+    black 85%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 15%,
+    black 85%,
+    transparent
+  );
+}
+
+/* Add a subtle pulse to the ticker items */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.ticker-container > div > div > div {
+  animation: pulse 4s ease-in-out infinite;
+}
