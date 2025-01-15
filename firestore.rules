@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null || request.time < timestamp.date(2024, 12, 31);
+    }
+
+    match /tournaments/{document=**} {
+      // Allow public read access to tournaments
+      allow read: if true;
+      // Allow write access if authenticated or before 2024 (temporary for development)
+      allow write: if isAuthenticated();
+    }
+
+    match /events/{event} {
+      // Allow read access to events
+      allow read: if true;
+      // Allow write access during development
+      allow write: if request.time < timestamp.date(2024, 12, 31);
+    }
+
+    match /colleges/{college} {
+      // Allow read access to colleges
+      allow read: if true;
+      // Allow write access during development
+      allow write: if request.time < timestamp.date(2024, 12, 31);
+
+      match /fraternities/{fraternity} {
+        // Allow read access to fraternities
+        allow read: if true;
+        // Allow write access during development
+        allow write: if request.time < timestamp.date(2024, 12, 31);
+      }
+    }
+  }
+}
