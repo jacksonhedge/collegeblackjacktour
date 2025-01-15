@@ -7,7 +7,7 @@ try {
   // Initialize admin SDK if not already initialized
   const apps = admin.apps;
   if (!apps.length) {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_ACCOUNT_KEY);
+    const serviceAccount = require("../../serviceAccountKey.txt");
     app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       storageBucket: "collegeblackjacktour.appspot.com",
