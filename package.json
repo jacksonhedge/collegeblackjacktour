@@ -7,7 +7,9 @@
     "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "upload-logos": "node src/firebase/uploadLogos.js",
+    "upload-logos:admin": "node src/firebase/admin-upload.js"
   },
   "dependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.2",

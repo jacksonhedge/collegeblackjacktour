@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
-
-const ADMIN_PASSWORD = 'hedgepayments';
-const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+import { signInAsAdmin } from '../firebase/auth';
 
 const AdminLoginPage = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      // Set session expiration
-      const expiresAt = new Date().getTime() + SESSION_DURATION;
-      localStorage.setItem('adminSessionExpires', expiresAt.toString());
+    try {
+      await signInAsAdmin(password);
       onLogin();
-    } else {
+    } catch (error) {
+      console.error('Login error:', error);
       setError('Invalid password');
     }
   };

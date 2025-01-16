@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { uploadTournamentImage } from '../firebase/storage';
 
-const TournamentForm = ({ selectedTournament, onCancel, onSuccess }) => {
+const TournamentForm = ({ selectedTournament, selectedCollege, selectedFraternity, onCancel, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: selectedTournament?.title || '',
@@ -11,17 +11,37 @@ const TournamentForm = ({ selectedTournament, onCancel, onSuccess }) => {
     time: selectedTournament?.time || '',
     location: selectedTournament?.location || '',
     status: selectedTournament?.status || 'scheduled',
-    type: selectedTournament?.type || 'dye',
-    chapter: selectedTournament?.chapter || '',
+    type: selectedTournament?.type || 'blackjack',
     winner: selectedTournament?.winner || '',
     runnerUp: selectedTournament?.runnerUp || '',
     registrationDeadline: selectedTournament?.registrationDeadline || '',
     maxParticipants: selectedTournament?.maxParticipants || '',
     currentParticipants: selectedTournament?.currentParticipants || '0',
     entryFee: selectedTournament?.entryFee || '',
-    imageUrl: selectedTournament?.imageUrl || ''
+    imageUrl: selectedTournament?.imageUrl || '',
+    // New fields for college and fraternity info
+    collegeId: selectedTournament?.collegeId || '',
+    collegeName: selectedTournament?.collegeName || '',
+    fraternityId: selectedTournament?.fraternityId || '',
+    fraternityName: selectedTournament?.fraternityName || '',
+    chapterName: selectedTournament?.chapterName || ''
   });
   const [imageFile, setImageFile] = useState(null);
+
+  // Set college and fraternity info when provided
+  useEffect(() => {
+    if (selectedCollege && selectedFraternity) {
+      setFormData(prev => ({
+        ...prev,
+        collegeId: selectedCollege.id,
+        collegeName: selectedCollege.name,
+        fraternityId: selectedFraternity.id,
+        fraternityName: selectedFraternity.name,
+        chapterName: selectedFraternity.chapterName || '',
+        location: selectedFraternity.chapterName ? `${selectedFraternity.chapterName} - ${selectedCollege.name}` : selectedCollege.name
+      }));
+    }
+  }, [selectedCollege, selectedFraternity]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -42,19 +62,19 @@ const TournamentForm = ({ selectedTournament, onCancel, onSuccess }) => {
     setLoading(true);
 
     try {
-      let imageUrl = formData.imageUrl; // Preserve existing imageUrl
+      let imageUrl = formData.imageUrl;
       if (imageFile) {
         try {
           imageUrl = await uploadTournamentImage(imageFile);
         } catch (error) {
           console.error('Error uploading image:', error);
-          imageUrl = '/tournament-images/default.jpg'; // Fallback to default if upload fails
+          imageUrl = '/tournament-images/default.jpg';
         }
       }
 
       const tournamentData = {
         ...formData,
-        imageUrl: imageUrl || '/tournament-images/default.jpg', // Always ensure there's an image URL
+        imageUrl: imageUrl || '/tournament-images/default.jpg',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };
@@ -80,6 +100,16 @@ const TournamentForm = ({ selectedTournament, onCancel, onSuccess }) => {
         {selectedTournament ? 'Edit Tournament' : 'Add New Tournament'}
       </h2>
       
+      {selectedCollege && selectedFraternity && (
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h3 className="font-semibold text-blue-900">Creating Tournament For:</h3>
+          <p className="text-blue-800">{selectedFraternity.name}</p>
+          <p className="text-sm text-blue-600">
+            {selectedFraternity.chapterName} - {selectedCollege.name}
+          </p>
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Title */}
@@ -104,9 +134,9 @@ const TournamentForm = ({ selectedTournament, onCancel, onSuccess }) => {
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
-              <option value="dye">Dye</option>
               <option value="blackjack">Blackjack</option>
               <option value="poker">Poker</option>
+              <option value="dye">Dye</option>
             </select>
           </div>
 
@@ -143,19 +173,6 @@ const TournamentForm = ({ selectedTournament, onCancel, onSuccess }) => {
               type="text"
               name="location"
               value={formData.location}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              required
-            />
-          </div>
-
-          {/* Chapter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Chapter</label>
-            <input
-              type="text"
-              name="chapter"
-              value={formData.chapter}
               onChange={handleInputChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               required
@@ -225,7 +242,7 @@ const TournamentForm = ({ selectedTournament, onCancel, onSuccess }) => {
             />
           </div>
 
-          {/* Winner (only for completed tournaments) */}
+          {/* Winner and Runner-up (only for completed tournaments) */}
           {formData.status === 'completed' && (
             <>
               <div>

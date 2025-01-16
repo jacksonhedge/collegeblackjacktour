@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
 import FraternityForm from '../components/FraternityForm';
 
 const AdminFraternitiesPage = () => {
@@ -10,16 +10,39 @@ const AdminFraternitiesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Helper function to normalize college name (same as in initializeColleges.js)
+  const createCollegeId = (name) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
   useEffect(() => {
     const fetchColleges = async () => {
       try {
         const db = getFirestore();
         const collegesRef = collection(db, 'colleges');
-        const snapshot = await getDocs(query(collegesRef, orderBy('name')));
-        const collegeList = snapshot.docs.map(doc => ({
+        // Don't sort by name since some colleges might not have it in their data
+        const snapshot = await getDocs(collegesRef);
+        console.log('DEBUG - All college documents:', snapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
-        }));
+          data: doc.data()
+        })));
+        const collegeList = snapshot.docs.map(doc => {
+          const data = doc.data();
+          // Get the mascot from the ID
+          const mascot = doc.id.split('-').slice(-1)[0]
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          return {
+            id: doc.id,
+            name: data.name || doc.id.split('-').slice(0, -1).join(' '),
+            fullName: `${data.name || doc.id.split('-').slice(0, -1).join(' ')} ${mascot}`,
+            ...data
+          };
+        });
         setColleges(collegeList);
         setLoading(false);
       } catch (err) {
@@ -40,22 +63,32 @@ const AdminFraternitiesPage = () => {
         setLoading(true);
         const db = getFirestore();
         
-        // Try both the normalized ID and the simple ID
-        const simpleId = selectedCollege.id.split('-').slice(0, -1).join('-');
+        // Use the full college ID (including mascot)
+        console.log('Selected college details:', {
+          id: selectedCollege.id,
+          name: selectedCollege.name,
+          fullName: selectedCollege.fullName,
+          rawData: selectedCollege
+        });
+
+        // First check if the college document exists
+        const collegeRef = doc(db, 'colleges', selectedCollege.id);
+        const collegeDoc = await getDoc(collegeRef);
+        console.log('College document exists:', collegeDoc.exists(), 'Data:', collegeDoc.data());
+
+        const fraternityRef = collection(db, 'colleges', selectedCollege.id, 'fraternities');
+        console.log('Attempting to fetch fraternities from:', fraternityRef.path);
         
-        // Try with normalized ID first
-        let snapshot = await getDocs(collection(db, 'colleges', selectedCollege.id, 'fraternities'));
-        
-        // If no results, try with simple ID
-        if (snapshot.empty) {
-          snapshot = await getDocs(collection(db, 'colleges', simpleId, 'fraternities'));
-        }
+        const snapshot = await getDocs(fraternityRef);
+        console.log('Fraternity snapshot:', snapshot.docs.length, 'documents found');
         
         const fraternityList = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
           ref: doc.ref
         }));
+        
+        console.log('Processed fraternity list:', fraternityList);
         
         setFraternities(fraternityList);
         setLoading(false);
@@ -88,11 +121,26 @@ const AdminFraternitiesPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Manage Fraternities</h1>
-        <p className="mt-2 text-sm text-gray-500">
-          Select a college to manage its fraternities
-        </p>
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Manage Fraternities</h1>
+          <p className="mt-2 text-sm text-gray-500">
+            Select a college to manage its fraternities
+          </p>
+        </div>
+        {selectedCollege && (
+          <button
+            onClick={async () => {
+              const db = getFirestore();
+              const collegeRef = doc(db, 'colleges', selectedCollege.id);
+              const collegeDoc = await getDoc(collegeRef);
+              alert(`College Document Debug:\nExists: ${collegeDoc.exists()}\nID: ${selectedCollege.id}\nData: ${JSON.stringify(collegeDoc.data(), null, 2)}`);
+            }}
+            className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+          >
+            Debug College Document
+          </button>
+        )}
       </div>
 
       <div className="mb-8">
@@ -104,6 +152,11 @@ const AdminFraternitiesPage = () => {
           value={selectedCollege?.id || ''}
           onChange={(e) => {
             const college = colleges.find(c => c.id === e.target.value);
+            console.log('DEBUG - College selected:', {
+              selectedId: e.target.value,
+              collegeFound: !!college,
+              collegeDetails: college
+            });
             setSelectedCollege(college);
             setFraternities([]);
             setSelectedFraternity(null);
@@ -111,15 +164,23 @@ const AdminFraternitiesPage = () => {
           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
         >
           <option value="">Select a college...</option>
-          {colleges.map((college) => (
+          {[...colleges].sort((a, b) => a.fullName.localeCompare(b.fullName)).map((college) => (
             <option key={college.id} value={college.id}>
-              {college.name}
+              {college.fullName || college.name}
             </option>
           ))}
         </select>
       </div>
 
-      {selectedCollege && (
+      {selectedCollege && loading && (
+        <div className="text-center py-6">
+          <p className="text-gray-500">Loading fraternities...</p>
+          <p className="text-xs text-gray-400 mt-2">
+            Checking: colleges/{selectedCollege.id}/fraternities
+          </p>
+        </div>
+      )}
+      {selectedCollege && !loading && (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
             {fraternities.map((fraternity) => (
@@ -167,8 +228,13 @@ const AdminFraternitiesPage = () => {
             ))}
           </ul>
           {fraternities.length === 0 && !loading && (
-            <div className="text-center py-6 text-gray-500">
-              No fraternities found for this college
+            <div className="text-center py-6">
+              <p className="text-gray-500 mb-2">
+                No fraternities found for this college
+              </p>
+              <p className="text-xs text-gray-400">
+                Looking in: colleges/{selectedCollege.id}/fraternities
+              </p>
             </div>
           )}
         </div>

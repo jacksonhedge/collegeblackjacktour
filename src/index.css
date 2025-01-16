@@ -35,22 +35,21 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(calc(-100% - 6rem)); /* account for spacing between items */
   }
 }
 
 .animate-ticker {
   animation: ticker 45s linear infinite;
-  transition: all 0.5s ease-in-out;
 }
 
-.animate-gradient-xy {
-  animation: gradient-xy 20s ease infinite;
-  background-size: 200% 200%;
+.animate-partner-ticker {
+  animation: ticker 30s linear infinite;
+  will-change: transform;
 }
 
+/* Ensure the first item appears seamlessly at the end */
 .ticker-container {
-  width: 100%;
   mask-image: linear-gradient(
     to right,
     transparent,
@@ -67,6 +66,11 @@
   );
 }
 
+.animate-gradient-xy {
+  animation: gradient-xy 20s ease infinite;
+  background-size: 200% 200%;
+}
+
 /* Add a subtle pulse to the ticker items */
 @keyframes pulse {
   0%, 100% {
@@ -81,4 +85,10 @@
 
 .ticker-container > div > div > div {
   animation: pulse 4s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+.animate-partner-ticker > div {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }

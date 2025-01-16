@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AdminTournamentsPage from '../pages/AdminTournamentsPage';
 import AdminFraternitiesPage from '../pages/AdminFraternitiesPage';
+import AdminCollegesPage from '../pages/AdminCollegesPage';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -40,6 +41,12 @@ const AdminLayout = () => {
                 >
                   Fraternities
                 </Link>
+                <Link
+                  to="/admin/colleges"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/colleges')}`}
+                >
+                  Colleges
+                </Link>
               </div>
             </div>
             <div className="flex items-center">
@@ -59,6 +66,7 @@ const AdminLayout = () => {
         <Routes>
           <Route path="tournaments" element={<AdminTournamentsPage />} />
           <Route path="fraternities" element={<AdminFraternitiesPage />} />
+          <Route path="colleges" element={<AdminCollegesPage />} />
           <Route path="*" element={<Navigate to="tournaments" replace />} />
         </Routes>
       </main>

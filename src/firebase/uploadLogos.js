@@ -1,38 +1,75 @@
-import { adminStorage } from './admin.js';
-import { COLLEGE_IMAGES } from './initializeColleges.js';
-import * as fs from 'fs';
-import * as path from 'path';
+import { ref, uploadBytes } from 'firebase/storage';
+import { storage } from './admin-config.js';
+import { readFileSync, readdirSync, statSync } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const uploadLogos = async () => {
-  console.log('Starting logo upload...');
-  const bucket = adminStorage.bucket();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-  for (const imageName of COLLEGE_IMAGES) {
-    try {
-      const localPath = path.join(process.cwd(), 'public', 'college-logos', imageName);
+/**
+ * Uploads all college logos to Firebase Storage in a flat, alphabetical structure
+ */
+async function uploadLogos() {
+  const baseDir = join(dirname(__dirname), '..', 'public', 'college-logos');
+  const logoFiles = [];
+  
+  // Function to collect all logo files
+  function collectLogoFiles(dirPath) {
+    const entries = readdirSync(dirPath);
+    
+    for (const entry of entries) {
+      const fullPath = join(dirPath, entry);
+      const stats = statSync(fullPath);
       
-      // Check if file exists locally
-      if (!fs.existsSync(localPath)) {
-        console.log(`File not found: ${localPath}`);
-        continue;
+      if (stats.isDirectory()) {
+        // Process subdirectory
+        collectLogoFiles(fullPath);
+      } else if (stats.isFile() && (entry.endsWith('.png') || entry.endsWith('.svg'))) {
+        // Store file info
+        logoFiles.push({
+          path: fullPath,
+          name: entry,
+          isDefault: entry === 'default-college-logo.svg'
+        });
       }
-
-      // Upload to Firebase Storage
-      await bucket.upload(localPath, {
-        destination: `college-logos/${imageName}`,
-        metadata: {
-          contentType: 'image/png',
-          cacheControl: 'public, max-age=31536000',
-        },
-      });
-
-      console.log(`Successfully uploaded ${imageName}`);
-    } catch (error) {
-      console.error(`Error uploading ${imageName}:`, error);
     }
   }
+  
+  try {
+    // Collect all logo files
+    collectLogoFiles(baseDir);
+    
+    // Sort files alphabetically, but put default logo first if it exists
+    logoFiles.sort((a, b) => {
+      if (a.isDefault) return -1;
+      if (b.isDefault) return 1;
+      return a.name.localeCompare(b.name);
+    });
+    
+    // Upload files
+    for (const file of logoFiles) {
+      const fileContent = readFileSync(file.path);
+      // Store in root of college-logos without conference subdirectories
+      const storagePath = `college-logos/${file.name}`;
+      const imageRef = ref(storage, storagePath);
+      
+      try {
+        await uploadBytes(imageRef, fileContent, {
+          contentType: file.name.endsWith('.png') ? 'image/png' : 'image/svg+xml'
+        });
+        console.log(`Successfully uploaded: ${storagePath}`);
+      } catch (error) {
+        console.error(`Error uploading ${storagePath}:`, error);
+      }
+    }
+    
+    console.log('Upload complete!');
+  } catch (error) {
+    console.error('Error during upload:', error);
+  }
+}
 
-  console.log('Logo upload complete');
-};
-
-uploadLogos().catch(console.error);
+// Run the upload
+uploadLogos();

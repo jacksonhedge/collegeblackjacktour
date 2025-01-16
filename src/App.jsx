@@ -5,24 +5,20 @@ import TournamentsPage from './pages/TournamentsPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminLayout from './components/AdminLayout';
 import { useState, useEffect } from 'react';
+import { isAuthenticated as checkAuthStatus } from './firebase/auth';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const checkSession = () => {
-      const expiresAt = localStorage.getItem('adminSessionExpires');
-      if (expiresAt) {
-        const isValid = new Date().getTime() < parseInt(expiresAt);
-        setIsAuthenticated(isValid);
-        if (!isValid) {
-          localStorage.removeItem('adminSessionExpires');
-        }
-      }
+    const checkAuth = () => {
+      setIsAuthenticated(checkAuthStatus());
     };
 
-    checkSession();
-    const interval = setInterval(checkSession, 1000);
+    // Check session periodically
+    checkAuth();
+    const interval = setInterval(checkAuth, 1000);
+
     return () => clearInterval(interval);
   }, []);
 
