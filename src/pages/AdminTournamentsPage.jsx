@@ -4,6 +4,8 @@ import { db } from '../firebase/config';
 import SessionWarning from '../components/SessionWarning';
 import CollegeList from '../components/CollegeList';
 import TournamentForm from '../components/TournamentForm';
+import TournamentTicker from '../components/TournamentTicker';
+import TournamentSchedule from '../components/TournamentSchedule';
 
 const SESSION_DURATION = 30 * 60 * 1000;
 const WARNING_THRESHOLD = 5 * 60 * 1000;
@@ -129,8 +131,8 @@ const AdminTournamentsPage = ({ onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="bg-gray-800 text-white px-4 py-2 flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gray-100 pb-16 flex flex-col">
+      <div className="bg-gray-800 text-white px-4 py-2 flex justify-between items-center">
         <span 
           className="cursor-pointer hover:text-gray-200"
           onClick={handleBack}
@@ -146,7 +148,10 @@ const AdminTournamentsPage = ({ onLogout }) => {
           </button>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto">
+      <div className="sticky top-0 z-10">
+        <TournamentTicker tournaments={tournaments} />
+      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1">
         {showTournamentForm ? (
           <TournamentForm
             selectedTournament={selectedTournament}
@@ -193,13 +198,22 @@ const AdminTournamentsPage = ({ onLogout }) => {
           </div>
         ) : (
           <>
-            <CollegeList onCollegeSelect={handleCollegeSelect} />
-            {tournaments.length > 0 && (
-              <div className="bg-white rounded-lg shadow overflow-hidden mt-8">
-                <div className="px-4 py-5 sm:px-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Recent Tournaments</h3>
-                </div>
-                <table className="min-w-full divide-y divide-gray-200">
+            <div className="space-y-8">
+              <CollegeList onCollegeSelect={handleCollegeSelect} />
+              
+              {/* Tournament Schedule Section */}
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Tournament Schedule</h3>
+                <TournamentSchedule tournaments={tournaments} />
+              </div>
+
+              {/* All Tournaments Table */}
+              {tournaments.length > 0 && (
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                  <div className="px-4 py-5 sm:px-6">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">All Tournaments</h3>
+                  </div>
+                  <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -272,9 +286,10 @@ const AdminTournamentsPage = ({ onLogout }) => {
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
-            )}
+                  </table>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

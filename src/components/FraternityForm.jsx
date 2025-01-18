@@ -12,10 +12,15 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
     philanthropy: fraternity.philanthropy || '',
     instagramUsername: fraternity.instagramUsername || '',
     instagramLink: fraternity.instagramLink || '',
+    rushChairName: fraternity.rushChairName || '',
+    rushChairNumber: fraternity.rushChairNumber || '',
+    rushChairContacted: fraternity.rushChairContacted || false,
     presidentName: fraternity.presidentName || '',
     presidentNumber: fraternity.presidentNumber || '',
+    presidentContacted: fraternity.presidentContacted || false,
     philanthropyName: fraternity.philanthropyName || '',
-    philanthropyNumber: fraternity.philanthropyNumber || ''
+    philanthropyNumber: fraternity.philanthropyNumber || '',
+    philanthropyContacted: fraternity.philanthropyContacted || false
   });
 
   const handleInputChange = (e) => {
@@ -112,6 +117,7 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 >
+                  <option value="need to reach out">Need to Reach Out</option>
                   <option value="outreached">Outreached</option>
                   <option value="in contact">In Contact</option>
                   <option value="scheduled">Scheduled</option>
@@ -157,49 +163,128 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
             {/* Contact Information */}
             <div className="border-t pt-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">President Name</label>
-                  <input
-                    type="text"
-                    name="presidentName"
-                    value={formData.presidentName}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
+              <div className="grid grid-cols-1 gap-6">
+                {/* Rush Chair */}
+                <div className="grid grid-cols-2 gap-4 items-center bg-gray-50 p-4 rounded-lg">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Rush Chair Name</label>
+                    <input
+                      type="text"
+                      name="rushChairName"
+                      value={formData.rushChairName}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Rush Chair Number</label>
+                    <input
+                      type="tel"
+                      name="rushChairNumber"
+                      value={formData.rushChairNumber}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        name="rushChairContacted"
+                        checked={formData.rushChairContacted}
+                        onChange={(e) => handleInputChange({
+                          target: {
+                            name: 'rushChairContacted',
+                            value: e.target.checked
+                          }
+                        })}
+                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Contacted</span>
+                    </label>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">President Number</label>
-                  <input
-                    type="tel"
-                    name="presidentNumber"
-                    value={formData.presidentNumber}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
+                {/* President */}
+                <div className="grid grid-cols-2 gap-4 items-center bg-gray-50 p-4 rounded-lg">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">President Name</label>
+                    <input
+                      type="text"
+                      name="presidentName"
+                      value={formData.presidentName}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">President Number</label>
+                    <input
+                      type="tel"
+                      name="presidentNumber"
+                      value={formData.presidentNumber}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        name="presidentContacted"
+                        checked={formData.presidentContacted}
+                        onChange={(e) => handleInputChange({
+                          target: {
+                            name: 'presidentContacted',
+                            value: e.target.checked
+                          }
+                        })}
+                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Contacted</span>
+                    </label>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Philanthropy Chair Name</label>
-                  <input
-                    type="text"
-                    name="philanthropyName"
-                    value={formData.philanthropyName}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Philanthropy Chair Number</label>
-                  <input
-                    type="tel"
-                    name="philanthropyNumber"
-                    value={formData.philanthropyNumber}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
+                {/* Philanthropy Chair */}
+                <div className="grid grid-cols-2 gap-4 items-center bg-gray-50 p-4 rounded-lg">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Philanthropy Chair Name</label>
+                    <input
+                      type="text"
+                      name="philanthropyName"
+                      value={formData.philanthropyName}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Philanthropy Chair Number</label>
+                    <input
+                      type="tel"
+                      name="philanthropyNumber"
+                      value={formData.philanthropyNumber}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        name="philanthropyContacted"
+                        checked={formData.philanthropyContacted}
+                        onChange={(e) => handleInputChange({
+                          target: {
+                            name: 'philanthropyContacted',
+                            value: e.target.checked
+                          }
+                        })}
+                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-600">Contacted</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

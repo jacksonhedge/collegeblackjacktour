@@ -276,5 +276,6 @@ export const collegeNames = [
   "Wofford Terriers",
   "Wyoming Cowboys",
   "Xavier Musketeers",
-  "Yale Bulldogs"
+  "Yale Bulldogs",
+  "West Georgia Wolves"
 ];

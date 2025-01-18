@@ -217,31 +217,33 @@ const CollegeList = () => {
               onClick={() => handleCollegeClick(college)}
               className="bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden cursor-pointer transition-all duration-200 ease-in-out transform hover:-translate-y-1 border border-gray-100 hover:border-gray-200"
             >
-              <div className="p-6 flex flex-col items-center h-52">
+              <div className="p-6 flex flex-col items-center h-52 relative">
                 <div className="w-20 h-20 relative flex items-center justify-center bg-gray-50 rounded-md mb-4">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin opacity-0 transition-opacity duration-200" />
-                    </div>
-                    <img
-                      src={college.logoPath}
-                      alt={`${college.name} logo`}
-                      className="w-full h-full object-contain relative z-10 transition-opacity duration-200"
-                      onError={(e) => {
-                        e.target.src = '/default-college-logo.svg';
-                      }}
-                      onLoad={(e) => {
-                        e.target.parentElement.querySelector('.animate-spin').classList.add('opacity-0');
-                        e.target.classList.remove('opacity-0');
-                      }}
-                      loading="lazy"
-                      style={{ opacity: 0 }}
-                    />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin opacity-0 transition-opacity duration-200" />
                   </div>
+                  <img
+                    src={college.logoPath}
+                    alt={`${college.name} logo`}
+                    className="w-full h-full object-contain relative z-10 transition-opacity duration-200"
+                    onError={(e) => {
+                      e.target.src = '/default-college-logo.svg';
+                    }}
+                    onLoad={(e) => {
+                      e.target.parentElement.querySelector('.animate-spin').classList.add('opacity-0');
+                      e.target.classList.remove('opacity-0');
+                    }}
+                    loading="lazy"
+                    style={{ opacity: 0 }}
+                  />
+                </div>
                 <h2 className="text-lg font-semibold text-gray-900 text-center line-clamp-2 mb-2">{college.name}</h2>
                 <p className="text-sm text-gray-600">{college.conference}</p>
-                <p className="text-sm text-blue-600 mt-auto">
-                  {college.fraternityCount} {college.fraternityCount === 1 ? 'Fraternity' : 'Fraternities'}
-                </p>
+                <div className="absolute bottom-4 right-4 bg-blue-50 px-3 py-1 rounded-full">
+                  <p className="text-sm font-medium text-blue-600">
+                    {college.fraternityCount || 0} {(college.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
+                  </p>
+                </div>
               </div>
             </div>
           ))}
@@ -311,11 +313,12 @@ const CollegeList = () => {
                   ) : selectedCollegeFraternities.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {selectedCollegeFraternities.map(fraternity => (
-                        <FraternityCard
-                          key={fraternity.id}
-                          fraternity={fraternity}
-                          onClick={() => handleCollegeClick(selectedCollege)}
-                          onEdit={() => setEditingFraternity(fraternity)}
+                      <FraternityCard
+                        key={fraternity.id}
+                        fraternity={fraternity}
+                        collegeName={selectedCollege.name}
+                        onClick={() => handleCollegeClick(selectedCollege)}
+                        onEdit={() => setEditingFraternity(fraternity)}
                         />
                       ))}
                     </div>

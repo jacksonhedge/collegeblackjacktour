@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { fraternityList } from '../data/fraternityList';
 
@@ -20,11 +20,21 @@ const AddFraternityForm = ({ collegeName, onSuccess, onClose }) => {
 
       const fraternitiesRef = collection(db, 'colleges', normalizedCollegeId, 'fraternities');
       
+      // Add the fraternity
       await addDoc(fraternitiesRef, {
         name: selectedFraternity,
         status: 'outreached',
         createdAt: new Date().toISOString()
       });
+
+      // Update college fraternity count
+      const collegeRef = doc(db, 'colleges', normalizedCollegeId);
+      const collegeDoc = await getDoc(collegeRef);
+      if (collegeDoc.exists()) {
+        await updateDoc(collegeRef, {
+          fraternityCount: (collegeDoc.data().fraternityCount || 0) + 1
+        });
+      }
 
       onSuccess();
     } catch (error) {

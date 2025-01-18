@@ -3,6 +3,7 @@ import { Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AdminTournamentsPage from '../pages/AdminTournamentsPage';
 import AdminFraternitiesPage from '../pages/AdminFraternitiesPage';
 import AdminCollegesPage from '../pages/AdminCollegesPage';
+import AdminCalendarPage from '../pages/AdminCalendarPage';
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -30,6 +31,12 @@ const AdminLayout = () => {
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <Link
+                  to="/admin/colleges"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/colleges')}`}
+                >
+                  Colleges
+                </Link>
+                <Link
                   to="/admin/tournaments"
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/tournaments')}`}
                 >
@@ -42,10 +49,10 @@ const AdminLayout = () => {
                   Fraternities
                 </Link>
                 <Link
-                  to="/admin/colleges"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/colleges')}`}
+                  to="/admin/calendar"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/calendar')}`}
                 >
-                  Colleges
+                  Calendar
                 </Link>
               </div>
             </div>
@@ -64,10 +71,11 @@ const AdminLayout = () => {
       {/* Admin Content */}
       <main>
         <Routes>
+          <Route path="colleges" element={<AdminCollegesPage />} />
           <Route path="tournaments" element={<AdminTournamentsPage />} />
           <Route path="fraternities" element={<AdminFraternitiesPage />} />
-          <Route path="colleges" element={<AdminCollegesPage />} />
-          <Route path="*" element={<Navigate to="tournaments" replace />} />
+          <Route path="calendar" element={<AdminCalendarPage onLogout={handleLogout} />} />
+          <Route path="*" element={<Navigate to="colleges" replace />} />
         </Routes>
       </main>
     </div>
