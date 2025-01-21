@@ -4,10 +4,13 @@ import { db } from '../firebase/config';
 import FraternityCard from './FraternityCard';
 import AddFraternityForm from './AddFraternityForm';
 import FraternityForm from './FraternityForm';
+import AddCollegeForm from './AddCollegeForm';
 
 // Helper function to normalize college name for Firestore ID
 const normalizeCollegeName = (name) => {
+  if (!name) return '';
   return name
+    .toString()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
@@ -26,9 +29,9 @@ const CollegeList = () => {
   const [loadingFraternities, setLoadingFraternities] = useState(false);
   const [editingFraternity, setEditingFraternity] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddCollegeForm, setShowAddCollegeForm] = useState(false);
 
-  useEffect(() => {
-    const fetchColleges = async () => {
+  const fetchColleges = async () => {
       try {
         setLoading(true);
         const collegesRef = collection(db, 'colleges');
@@ -47,33 +50,37 @@ const CollegeList = () => {
       }
     };
 
+  useEffect(() => {
     fetchColleges();
   }, []);
 
   // Get unique conferences
   const conferences = useMemo(() => {
-    return [...new Set(colleges.map(college => college.conference))].sort();
+    return [...new Set(colleges.filter(college => college?.conference).map(college => college.conference))].sort();
   }, [colleges]);
 
   // Filter and sort colleges
   const filteredColleges = useMemo(() => {
     let filtered = colleges.filter(college => {
-      const matchesSearch = college.name.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!college || !college.name) return false;
+      const matchesSearch = college.name.toLowerCase().includes((searchTerm || '').toLowerCase());
       const matchesConference = !selectedConference || college.conference === selectedConference;
       return matchesSearch && matchesConference;
     });
 
     // Sort based on fraternity count if selected
     if (sortBy === 'fraternities-desc') {
-      filtered = [...filtered].sort((a, b) => (b.fraternityCount || 0) - (a.fraternityCount || 0));
+      filtered = [...filtered].sort((a, b) => (b?.fraternityCount || 0) - (a?.fraternityCount || 0));
     } else if (sortBy === 'fraternities-asc') {
-      filtered = [...filtered].sort((a, b) => (a.fraternityCount || 0) - (b.fraternityCount || 0));
+      filtered = [...filtered].sort((a, b) => (a?.fraternityCount || 0) - (b?.fraternityCount || 0));
     }
 
     return filtered;
   }, [colleges, searchTerm, selectedConference, sortBy]);
 
   const handleCollegeClick = async (college) => {
+    if (!college?.name) return;
+    
     setSelectedCollege(college);
     setShowModal(true);
     setLoadingFraternities(true);
@@ -97,7 +104,18 @@ const CollegeList = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 space-y-4 bg-white p-6 rounded-lg shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">College Directory</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">College Directory</h1>
+          <button
+            onClick={() => setShowAddCollegeForm(true)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add College
+          </button>
+        </div>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -167,35 +185,39 @@ const CollegeList = () => {
               <div className="bg-green-50 p-4 rounded-lg">
                 <h3 className="text-sm font-semibold text-green-900">Average per College</h3>
                 <p className="text-2xl font-bold text-green-600">
-                  {(filteredColleges.reduce((sum, college) => sum + (college.fraternityCount || 0), 0) / filteredColleges.length).toFixed(1)}
+                  {(filteredColleges.reduce((sum, college) => sum + (college.fraternityCount || 0), 0) / filteredColleges.length || 0).toFixed(1)}
                 </p>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-purple-900">Most Fraternities</h3>
-                <p className="text-lg font-bold text-purple-600 truncate">
-                  {filteredColleges.reduce((max, college) => 
-                    (college.fraternityCount || 0) > (max.fraternityCount || 0) ? college : max
-                  , filteredColleges[0]).name}
-                  <span className="text-sm font-normal ml-1">
-                    ({filteredColleges.reduce((max, college) => 
-                      (college.fraternityCount || 0) > (max.fraternityCount || 0) ? college : max
-                    , filteredColleges[0]).fraternityCount})
-                  </span>
-                </p>
-              </div>
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-orange-900">Least Fraternities</h3>
-                <p className="text-lg font-bold text-orange-600 truncate">
-                  {filteredColleges.reduce((min, college) => 
-                    (college.fraternityCount || 0) < (min.fraternityCount || 0) ? college : min
-                  , filteredColleges[0]).name}
-                  <span className="text-sm font-normal ml-1">
-                    ({filteredColleges.reduce((min, college) => 
-                      (college.fraternityCount || 0) < (min.fraternityCount || 0) ? college : min
-                    , filteredColleges[0]).fraternityCount})
-                  </span>
-                </p>
-              </div>
+              {filteredColleges.length > 0 && (
+                <>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <h3 className="text-sm font-semibold text-purple-900">Most Fraternities</h3>
+                    <p className="text-lg font-bold text-purple-600 truncate">
+                      {filteredColleges.reduce((max, college) => 
+                        (!max || (college.fraternityCount || 0) > (max.fraternityCount || 0)) ? college : max
+                      , null)?.name || 'N/A'}
+                      <span className="text-sm font-normal ml-1">
+                        ({filteredColleges.reduce((max, college) => 
+                          (!max || (college.fraternityCount || 0) > (max.fraternityCount || 0)) ? college : max
+                        , null)?.fraternityCount || 0})
+                      </span>
+                    </p>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <h3 className="text-sm font-semibold text-orange-900">Least Fraternities</h3>
+                    <p className="text-lg font-bold text-orange-600 truncate">
+                      {filteredColleges.reduce((min, college) => 
+                        (!min || (college.fraternityCount || 0) < (min.fraternityCount || 0)) ? college : min
+                      , null)?.name || 'N/A'}
+                      <span className="text-sm font-normal ml-1">
+                        ({filteredColleges.reduce((min, college) => 
+                          (!min || (college.fraternityCount || 0) < (min.fraternityCount || 0)) ? college : min
+                        , null)?.fraternityCount || 0})
+                      </span>
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -223,8 +245,8 @@ const CollegeList = () => {
                     <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin opacity-0 transition-opacity duration-200" />
                   </div>
                   <img
-                    src={college.logoPath}
-                    alt={`${college.name} logo`}
+                    src={college?.logoPath || '/default-college-logo.svg'}
+                    alt={`${college?.name || 'College'} logo`}
                     className="w-full h-full object-contain relative z-10 transition-opacity duration-200"
                     onError={(e) => {
                       e.target.src = '/default-college-logo.svg';
@@ -237,11 +259,11 @@ const CollegeList = () => {
                     style={{ opacity: 0 }}
                   />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900 text-center line-clamp-2 mb-2">{college.name}</h2>
-                <p className="text-sm text-gray-600">{college.conference}</p>
+                <h2 className="text-lg font-semibold text-gray-900 text-center line-clamp-2 mb-2">{college?.name || 'Unknown College'}</h2>
+                <p className="text-sm text-gray-600">{college?.conference || 'Unknown Conference'}</p>
                 <div className="absolute bottom-4 right-4 bg-blue-50 px-3 py-1 rounded-full">
                   <p className="text-sm font-medium text-blue-600">
-                    {college.fraternityCount || 0} {(college.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
+                    {college?.fraternityCount || 0} {(college?.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
                   </p>
                 </div>
               </div>
@@ -283,11 +305,13 @@ const CollegeList = () => {
                 <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg">
                   <div className="w-20 h-20 relative flex items-center justify-center">
                     <img
-                      src={selectedCollege.logoPath}
-                      alt={`${selectedCollege.name} logo`}
+                      src={selectedCollege?.logoPath || '/default-college-logo.svg'}
+                      alt={`${selectedCollege?.name || 'College'} logo`}
                       className="w-full h-full object-contain"
                       onError={(e) => {
-                        const altPath = `/college-logos/${selectedCollege.conference.replace(' ', '-')}/${selectedCollege.name.replace(/\s+/g, '-')}-logo.png`;
+                        const altPath = selectedCollege?.conference && selectedCollege?.name
+                          ? `/college-logos/${selectedCollege.conference.replace(' ', '-')}/${selectedCollege.name.replace(/\s+/g, '-')}-logo.png`
+                          : '/default-college-logo.svg';
                         if (e.target.src !== altPath) {
                           e.target.src = altPath;
                         } else {
@@ -297,10 +321,10 @@ const CollegeList = () => {
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">{selectedCollege.name}</h3>
-                    <p className="text-gray-600">{selectedCollege.conference}</p>
+                    <h3 className="text-xl font-bold text-gray-900">{selectedCollege?.name || 'Unknown College'}</h3>
+                    <p className="text-gray-600">{selectedCollege?.conference || 'Unknown Conference'}</p>
                     <p className="text-blue-600">
-                      {selectedCollege.fraternityCount} {selectedCollege.fraternityCount === 1 ? 'Fraternity' : 'Fraternities'}
+                      {selectedCollege?.fraternityCount || 0} {(selectedCollege?.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
                     </p>
                   </div>
                 </div>
@@ -314,9 +338,9 @@ const CollegeList = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {selectedCollegeFraternities.map(fraternity => (
                       <FraternityCard
-                        key={fraternity.id}
+                        key={fraternity?.id || Math.random()}
                         fraternity={fraternity}
-                        collegeName={selectedCollege.name}
+                        collegeName={selectedCollege?.name || 'Unknown College'}
                         onClick={() => handleCollegeClick(selectedCollege)}
                         onEdit={() => setEditingFraternity(fraternity)}
                         />
@@ -324,7 +348,7 @@ const CollegeList = () => {
                     </div>
                   ) : (
                     <div className="p-4 rounded-lg bg-gray-50">
-                      <p className="text-gray-600 text-center">No fraternities found for {selectedCollege.name}</p>
+                      <p className="text-gray-600 text-center">No fraternities found for {selectedCollege?.name || 'this college'}</p>
                     </div>
                   )}
                 </div>
@@ -335,7 +359,7 @@ const CollegeList = () => {
       )}
 
       {/* Fraternity Edit Modal */}
-      {editingFraternity && (
+      {editingFraternity && selectedCollege?.name && (
         <FraternityForm
           fraternity={editingFraternity}
           collegeName={selectedCollege.name}
@@ -348,7 +372,7 @@ const CollegeList = () => {
       )}
 
       {/* Add Fraternity Modal */}
-      {showAddForm && (
+      {showAddForm && selectedCollege?.name && (
         <AddFraternityForm
           collegeName={selectedCollege.name}
           onSuccess={() => {
@@ -356,6 +380,18 @@ const CollegeList = () => {
             handleCollegeClick(selectedCollege);
           }}
           onClose={() => setShowAddForm(false)}
+        />
+      )}
+
+      {/* Add College Form */}
+      {showAddCollegeForm && (
+        <AddCollegeForm
+          onClose={() => setShowAddCollegeForm(false)}
+          onSuccess={() => {
+            setShowAddCollegeForm(false);
+            // Refresh the colleges list
+            fetchColleges();
+          }}
         />
       )}
     </div>

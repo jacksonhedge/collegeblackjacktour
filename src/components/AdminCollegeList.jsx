@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { COLLEGE_IMAGES } from '../data/collegeImages';
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -11,21 +11,17 @@ const AdminCollegeList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedConference, setSelectedConference] = useState('');
   const [colleges, setColleges] = useState([]);
+  const [sortMethod, setSortMethod] = useState('fraternities');
+  const [loadingCounts, setLoadingCounts] = useState(true);
+  const [selectedCollege, setSelectedCollege] = useState(null);
+  const [selectedCollegeFraternities, setSelectedCollegeFraternities] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingFraternity, setEditingFraternity] = useState(null);
+  const [loadingFraternities, setLoadingFraternities] = useState(false);
+  const [editingConference, setEditingConference] = useState(false);
+  const [savingConference, setSavingConference] = useState(false);
 
-  // Helper function to format college name from filename
-  const formatCollegeName = (filename) => {
-    return filename
-      .replace(/-/g, ' ')
-      .replace(/_/g, ' ')
-      .replace(/logo\.png$/, '')
-      .replace(/\.png$/, '')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ')
-      .trim();
-  };
-
-  // Conference mapping with exact abbreviations from directory
   const conferenceMap = {
     'A10': 'Atlantic 10',
     'ACC': 'Atlantic Coast Conference',
@@ -53,7 +49,6 @@ const AdminCollegeList = () => {
     'WCC': 'West Coast Conference'
   };
 
-  // Exact conference order from directory
   const conferenceOrder = [
     'A10',
     'ACC',
@@ -81,19 +76,28 @@ const AdminCollegeList = () => {
     'WCC'
   ];
 
-  // Helper function to get abbreviated conference name
+  // Keep all the existing helper functions
+  const formatCollegeName = (filename) => {
+    return filename
+      .replace(/-/g, ' ')
+      .replace(/_/g, ' ')
+      .replace(/logo\.png$/, '')
+      .replace(/\.png$/, '')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+      .trim();
+  };
+
   const getAbbreviatedConference = (fullName) => {
     return Object.entries(conferenceMap).find(([abbr, full]) => full === fullName)?.[0] || fullName;
   };
 
-  // Helper function to get full conference name
   const getFullConferenceName = (abbr) => {
     return conferenceMap[abbr] || abbr;
   };
 
-  // Helper function to extract conference from path
   const getConference = (imageName) => {
-    // Try to match conference from the image name
     for (const [key, value] of Object.entries(conferenceMap)) {
       if (imageName.includes(key)) {
         return value;
@@ -102,53 +106,115 @@ const AdminCollegeList = () => {
     return 'Unknown Conference';
   };
 
-  // Get conferences in the correct order
   const abbreviatedConferences = conferenceOrder.map(abbr => ({
     abbr,
     full: conferenceMap[abbr] || abbr
   }));
 
-  // Fetch colleges data
-  const fetchColleges = async () => {
-    try {
-      const collegesRef = collection(db, 'colleges');
-      const snapshot = await getDocs(collegesRef);
-      const collegeData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setColleges(collegeData);
-    } catch (err) {
-      console.error('Error fetching colleges:', err);
-    }
-  };
+  // Get sorted and filtered colleges
+  const sortedAndFilteredColleges = useMemo(() => {
+    let filtered = COLLEGE_IMAGES.filter(image => {
+      const name = formatCollegeName(image);
+      const collegeDoc = colleges.find(c => c.name === name);
+      const conference = collegeDoc ? collegeDoc.conference : getConference(image);
+      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesConference = !selectedConference || conference === selectedConference;
+      return matchesSearch && matchesConference;
+    });
 
-  // Initial fetch
+    // Apply sorting
+    switch (sortMethod) {
+      case 'conference':
+        // Predefined conference order
+        const conferenceOrder = [
+          'Southeastern Conference', // SEC
+          'Big 12 Conference',      // Big 12
+          'Big Ten Conference',     // Big 10
+          'Atlantic Coast Conference', // ACC
+          'Atlantic 10',           // A10
+          'Mid-American Conference' // MAC
+        ];
+        
+        // Sort by predefined order first, then by size for remaining conferences
+        const conferenceSizes = {};
+        filtered.forEach(image => {
+          const conference = getConference(image);
+          conferenceSizes[conference] = (conferenceSizes[conference] || 0) + 1;
+        });
+        
+        return filtered.sort((a, b) => {
+          const confA = getConference(a);
+          const confB = getConference(b);
+          
+          const indexA = conferenceOrder.indexOf(confA);
+          const indexB = conferenceOrder.indexOf(confB);
+          
+          // If both conferences are in the predefined order, use that order
+          if (indexA !== -1 && indexB !== -1) {
+            return indexA - indexB;
+          }
+          // If only one conference is in the predefined order, it should come first
+          if (indexA !== -1) return -1;
+          if (indexB !== -1) return 1;
+          // For all other conferences, sort by size
+          return conferenceSizes[confB] - conferenceSizes[confA];
+        });
+
+      case 'alpha':
+        // Sort alphabetically by college name
+        return filtered.sort((a, b) => {
+          const nameA = formatCollegeName(a);
+          const nameB = formatCollegeName(b);
+          return nameA.localeCompare(nameB);
+        });
+
+      case 'fraternities':
+        // Sort by number of fraternities
+        return filtered.sort((a, b) => {
+          const collegeA = colleges.find(c => c.name === formatCollegeName(a));
+          const collegeB = colleges.find(c => c.name === formatCollegeName(b));
+          const countA = collegeA?.fraternityCount || 0;
+          const countB = collegeB?.fraternityCount || 0;
+          return countB - countA;
+        });
+
+      default:
+        return filtered;
+    }
+  }, [COLLEGE_IMAGES, colleges, searchTerm, selectedConference, sortMethod]);
+
+  // Keep all the existing effects and handlers
   useEffect(() => {
     fetchColleges();
   }, []);
 
-  // Filter colleges based on search and conference
-  const filteredColleges = COLLEGE_IMAGES.filter(image => {
-    const name = formatCollegeName(image);
-    // Check if we have updated conference data from Firestore
-    const collegeDoc = colleges.find(c => c.name === name);
-    const conference = collegeDoc ? collegeDoc.conference : getConference(image);
-    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesConference = !selectedConference || conference === selectedConference;
-    return matchesSearch && matchesConference;
-  });
+  const fetchColleges = async () => {
+    setLoadingCounts(true);
+    try {
+      const collegesRef = collection(db, 'colleges');
+      const snapshot = await getDocs(collegesRef);
+      
+      // Get all colleges with their basic data
+      const collegeData = await Promise.all(snapshot.docs.map(async doc => {
+        const collegeId = doc.id;
+        const fraternitiesRef = collection(db, 'colleges', collegeId, 'fraternities');
+        const fraternitiesSnapshot = await getDocs(fraternitiesRef);
+        
+        return {
+          id: collegeId,
+          ...doc.data(),
+          fraternityCount: fraternitiesSnapshot.docs.length
+        };
+      }));
+      
+      setColleges(collegeData);
+    } catch (err) {
+      console.error('Error fetching colleges:', err);
+    } finally {
+      setLoadingCounts(false);
+    }
+  };
 
-  const [selectedCollege, setSelectedCollege] = useState(null);
-  const [selectedCollegeFraternities, setSelectedCollegeFraternities] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingFraternity, setEditingFraternity] = useState(null);
-  const [loadingFraternities, setLoadingFraternities] = useState(false);
-  const [editingConference, setEditingConference] = useState(false);
-  const [savingConference, setSavingConference] = useState(false);
-
-  // Helper function to create a valid Firestore ID
   const createCollegeId = (name) => {
     return name
       .toLowerCase()
@@ -164,12 +230,10 @@ const AdminCollegeList = () => {
     setLoadingFraternities(true);
     
     try {
-      // Check if college exists in Firestore
       const collegeId = createCollegeId(name);
       const collegeRef = doc(db, 'colleges', collegeId);
       const collegeDoc = await getDoc(collegeRef);
       
-      // Get fraternities first to get accurate count
       const fraternitiesRef = collection(db, 'colleges', collegeId, 'fraternities');
       const fraternitiesSnapshot = await getDocs(fraternitiesRef);
       const fraternitiesData = fraternitiesSnapshot.docs.map(doc => ({
@@ -178,16 +242,14 @@ const AdminCollegeList = () => {
       }));
 
       if (!collegeDoc.exists()) {
-        // Initialize college in Firestore if it doesn't exist
         await setDoc(collegeRef, {
           name,
           conference,
           logoPath: `/college-logos/${imageName}`,
           fraternityCount: fraternitiesData.length
         });
-        await fetchColleges(); // Refresh colleges after adding new one
+        await fetchColleges();
       } else {
-        // Update selected college with actual data from Firestore
         setSelectedCollege(prev => ({
           ...prev,
           conference: collegeDoc.data().conference || conference
@@ -196,11 +258,10 @@ const AdminCollegeList = () => {
 
       setSelectedCollegeFraternities(fraternitiesData);
 
-      // Update fraternity count in Firestore
       await updateDoc(collegeRef, {
         fraternityCount: fraternitiesData.length
       });
-      await fetchColleges(); // Refresh colleges to update the count in the UI
+      await fetchColleges();
     } catch (err) {
       console.error('Error fetching fraternities:', err);
     } finally {
@@ -255,19 +316,51 @@ const AdminCollegeList = () => {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mt-4">
+        {/* Stats and Sorting */}
+        <div className="mt-4 space-y-4">
           <p className="text-sm text-gray-600">
-            Showing {filteredColleges.length} {filteredColleges.length === 1 ? 'college' : 'colleges'}
+            Showing {sortedAndFilteredColleges.length} {sortedAndFilteredColleges.length === 1 ? 'college' : 'colleges'}
             {selectedConference && ` in ${selectedConference}`}
             {searchTerm && ` matching "${searchTerm}"`}
           </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSortMethod('conference')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                sortMethod === 'conference'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Order by Conference Size
+            </button>
+            <button
+              onClick={() => setSortMethod('alpha')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                sortMethod === 'alpha'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Order Alphabetically
+            </button>
+            <button
+              onClick={() => setSortMethod('fraternities')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                sortMethod === 'fraternities'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Order by Number of Fraternities
+            </button>
+          </div>
         </div>
       </div>
 
       {/* College Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {filteredColleges.map((image, index) => {
+        {sortedAndFilteredColleges.map((image, index) => {
           const name = formatCollegeName(image);
           const collegeDoc = colleges.find(c => c.name === name);
           const conference = collegeDoc ? collegeDoc.conference : getConference(image);
@@ -286,9 +379,13 @@ const AdminCollegeList = () => {
               <h2 className="text-lg font-semibold text-gray-900 text-center line-clamp-2 mb-2">{name}</h2>
               <p className="text-sm text-gray-600">{getAbbreviatedConference(conference)}</p>
               <div className="absolute bottom-4 right-4 bg-blue-50 px-3 py-1 rounded-full">
-                <p className="text-sm font-medium text-blue-600">
-                  {collegeDoc?.fraternityCount || 0} {(collegeDoc?.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
-                </p>
+                {loadingCounts ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                ) : (
+                  <p className="text-sm font-medium text-blue-600">
+                    {collegeDoc?.fraternityCount || 0} {(collegeDoc?.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
+                  </p>
+                )}
               </div>
             </div>
           );
@@ -364,7 +461,7 @@ const AdminCollegeList = () => {
                                     await updateDoc(collegeRef, {
                                       conference: selectedCollege.conference
                                     });
-                                    await fetchColleges(); // Refresh colleges after update
+                                    await fetchColleges();
                                   } catch (error) {
                                     console.error('Error updating conference:', error);
                                     alert('Error updating conference. Please try again.');
@@ -385,7 +482,6 @@ const AdminCollegeList = () => {
                               <button
                                 onClick={() => {
                                   setEditingConference(false);
-                                  // Reset to original conference
                                   setSelectedCollege(prev => ({
                                     ...prev,
                                     conference: prev.conference
@@ -420,6 +516,40 @@ const AdminCollegeList = () => {
                   </div>
                 </div>
 
+                {/* College Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Scheduled Fraternities</h4>
+                    <span className="text-3xl font-bold text-blue-600">
+                      {loadingFraternities ? (
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                      ) : (
+                        selectedCollegeFraternities.filter(f => f.status === 'scheduled').length
+                      )}
+                    </span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">In Touch</h4>
+                    <span className="text-3xl font-bold text-green-600">
+                      {loadingFraternities ? (
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                      ) : (
+                        selectedCollegeFraternities.filter(f => f.status === 'in contact').length
+                      )}
+                    </span>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-4 flex flex-col items-center">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">No Contact Info</h4>
+                    <span className="text-3xl font-bold text-red-600">
+                      {loadingFraternities ? (
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+                      ) : (
+                        selectedCollegeFraternities.filter(f => !f.rushChairName && !f.presidentName && !f.philanthropyName).length
+                      )}
+                    </span>
+                  </div>
+                </div>
+
                 <div>
                   {loadingFraternities ? (
                     <div className="flex justify-center items-center p-8">
@@ -438,13 +568,11 @@ const AdminCollegeList = () => {
                               const fraternityRef = doc(db, 'colleges', collegeId, 'fraternities', fraternity.id);
                               await deleteDoc(fraternityRef);
                               
-                              // Update fraternity count
                               const collegeRef = doc(db, 'colleges', collegeId);
                               await updateDoc(collegeRef, {
                                 fraternityCount: selectedCollegeFraternities.length - 1
                               });
                               
-                              // Refresh data
                               handleCollegeClick(selectedCollege.imageName);
                             } catch (error) {
                               console.error('Error deleting fraternity:', error);

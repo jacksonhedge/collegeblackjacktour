@@ -20,7 +20,9 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
     presidentContacted: fraternity.presidentContacted || false,
     philanthropyName: fraternity.philanthropyName || '',
     philanthropyNumber: fraternity.philanthropyNumber || '',
-    philanthropyContacted: fraternity.philanthropyContacted || false
+    philanthropyContacted: fraternity.philanthropyContacted || false,
+    signupFormUrl: fraternity.signupFormUrl || '',
+    signupSheetUrl: fraternity.signupSheetUrl || ''
   });
 
   const handleInputChange = (e) => {
@@ -285,6 +287,35 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
                       <span className="ml-2 text-sm text-gray-600">Contacted</span>
                     </label>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sign-up Links */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Sign-up Links</h3>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Google Form URL</label>
+                  <input
+                    type="url"
+                    name="signupFormUrl"
+                    value={formData.signupFormUrl}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="https://forms.google.com/..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Google Sheet URL</label>
+                  <input
+                    type="url"
+                    name="signupSheetUrl"
+                    value={formData.signupSheetUrl}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="https://docs.google.com/spreadsheets/..."
+                  />
                 </div>
               </div>
             </div>

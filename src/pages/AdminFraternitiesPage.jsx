@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import FraternityForm from '../components/FraternityForm';
 
 const AdminFraternitiesPage = () => {
@@ -9,6 +9,8 @@ const AdminFraternitiesPage = () => {
   const [selectedFraternity, setSelectedFraternity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
+  const [bulkUpdateData, setBulkUpdateData] = useState({});
 
   // Helper function to normalize college name (same as in initializeColleges.js)
   const createCollegeId = (name) => {
@@ -181,8 +183,17 @@ const AdminFraternitiesPage = () => {
         </div>
       )}
       {selectedCollege && !loading && (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
+        <>
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => setShowBulkUpdateModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Bulk Update Rush Chairs
+            </button>
+          </div>
+          <div className="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul className="divide-y divide-gray-200">
             {fraternities.map((fraternity) => (
               <li key={fraternity.id}>
                 <div className="px-4 py-4 sm:px-6 hover:bg-gray-50 cursor-pointer"
@@ -226,17 +237,116 @@ const AdminFraternitiesPage = () => {
                 </div>
               </li>
             ))}
-          </ul>
-          {fraternities.length === 0 && !loading && (
-            <div className="text-center py-6">
-              <p className="text-gray-500 mb-2">
-                No fraternities found for this college
-              </p>
-              <p className="text-xs text-gray-400">
-                Looking in: colleges/{selectedCollege.id}/fraternities
-              </p>
+            </ul>
+            {fraternities.length === 0 && !loading && (
+              <div className="text-center py-6">
+                <p className="text-gray-500 mb-2">
+                  No fraternities found for this college
+                </p>
+                <p className="text-xs text-gray-400">
+                  Looking in: colleges/{selectedCollege.id}/fraternities
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Bulk Update Modal */}
+      {showBulkUpdateModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4">Bulk Update Rush Chairs</h2>
+            <div className="space-y-4">
+              {fraternities.map((fraternity) => (
+                <div key={fraternity.id} className="border p-4 rounded-md">
+                  <h3 className="font-semibold mb-2">{fraternity.name}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Rush Chair Name
+                      </label>
+                      <input
+                        type="text"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        value={bulkUpdateData[fraternity.id]?.rushChairName || ''}
+                        onChange={(e) => setBulkUpdateData(prev => ({
+                          ...prev,
+                          [fraternity.id]: {
+                            ...prev[fraternity.id],
+                            rushChairName: e.target.value
+                          }
+                        }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Rush Chair Number
+                      </label>
+                      <input
+                        type="text"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        value={bulkUpdateData[fraternity.id]?.rushChairNumber || ''}
+                        onChange={(e) => setBulkUpdateData(prev => ({
+                          ...prev,
+                          [fraternity.id]: {
+                            ...prev[fraternity.id],
+                            rushChairNumber: e.target.value
+                          }
+                        }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowBulkUpdateModal(false);
+                  setBulkUpdateData({});
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const db = getFirestore();
+                    const batch = writeBatch(db);
+
+                    Object.entries(bulkUpdateData).forEach(([fraternityId, data]) => {
+                      if (data.rushChairName || data.rushChairNumber) {
+                        const fraternityRef = doc(db, 'colleges', selectedCollege.id, 'fraternities', fraternityId);
+                        batch.update(fraternityRef, {
+                          rushChairName: data.rushChairName || '',
+                          rushChairNumber: data.rushChairNumber || ''
+                        });
+                      }
+                    });
+
+                    await batch.commit();
+                    
+                    // Update local state
+                    setFraternities(prev => prev.map(frat => ({
+                      ...frat,
+                      ...bulkUpdateData[frat.id]
+                    })));
+                    
+                    setShowBulkUpdateModal(false);
+                    setBulkUpdateData({});
+                  } catch (err) {
+                    console.error('Error updating rush chairs:', err);
+                    setError('Failed to update rush chairs');
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Save All Changes
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

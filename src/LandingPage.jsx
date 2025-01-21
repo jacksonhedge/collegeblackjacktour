@@ -20,37 +20,34 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-700 via-gray-900 to-black animate-gradient-xy pt-16">
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center h-[60vh] space-y-8">
-        <img 
-          src="/CCT_Logo_1.png" 
-          alt="CCT Logo" 
-          className="w-96 md:w-[600px] animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)]"
-        />
-        <h1 className="text-5xl md:text-7xl font-black text-white tracking-widest animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)]">
-          COMING SOON
-        </h1>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-20 px-4">
+        <div className="max-w-4xl w-full flex flex-col items-center space-y-12">
+          <img 
+            src="/CCT_Logo_1.png" 
+            alt="CCT Logo" 
+            className="w-72 md:w-[450px] animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)]"
+          />
+          <h1 className="text-4xl md:text-6xl font-black text-white tracking-widest animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)] text-center">
+            COMING SOON
+          </h1>
+        </div>
       </div>
 
       {/* Partners Section */}
-      <div className="w-full bg-black/40 backdrop-blur-lg py-12">
-        <h2 className="text-2xl font-bold text-white text-center mb-8">Our Partners</h2>
-        <div className="ticker-container overflow-hidden">
-          <div className="flex space-x-32 animate-partner-ticker">
-            {/* Repeat partners five times to ensure smooth looping */}
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex space-x-32 whitespace-nowrap">
-                {partners.map((partner) => (
-                  <div 
-                    key={`${i}-${partner.name}`}
-                    className="w-48 h-24 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center p-4 transition-all duration-300"
-                  >
-                    <img 
-                      src={partner.logo} 
-                      alt={partner.name} 
-                      className={`max-w-full max-h-full object-contain ${partner.name === 'Bankroll' ? 'scale-120' : ''}`}
-                    />
-                  </div>
-                ))}
+      <div className="w-full bg-black/40 backdrop-blur-lg py-16">
+        <h2 className="text-3xl font-bold text-white text-center mb-12">Our Partners</h2>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {partners.map((partner) => (
+              <div 
+                key={partner.name}
+                className="bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center p-8 transition-all duration-300 aspect-video"
+              >
+                <img 
+                  src={partner.logo} 
+                  alt={partner.name} 
+                  className={`max-w-full max-h-full object-contain ${partner.name === 'Bankroll' ? 'scale-120' : ''}`}
+                />
               </div>
             ))}
           </div>
