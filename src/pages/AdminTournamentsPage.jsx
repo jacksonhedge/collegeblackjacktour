@@ -10,7 +10,9 @@ import TournamentSchedule from '../components/TournamentSchedule';
 const SESSION_DURATION = 30 * 60 * 1000;
 const WARNING_THRESHOLD = 5 * 60 * 1000;
 
-const AdminTournamentsPage = ({ onLogout }) => {
+import { AdminLevel } from '../firebase/auth';
+
+const AdminTournamentsPage = ({ onLogout, adminLevel }) => {
   const [tournaments, setTournaments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showTournamentForm, setShowTournamentForm] = useState(false);
@@ -199,16 +201,44 @@ const AdminTournamentsPage = ({ onLogout }) => {
         ) : (
           <>
             <div className="space-y-8">
-              <CollegeList onCollegeSelect={handleCollegeSelect} />
+              {adminLevel === AdminLevel.SUPER && (
+                <CollegeList onCollegeSelect={handleCollegeSelect} />
+              )}
               
+              {/* Stats Section - Only visible to regular admin */}
+              {adminLevel === AdminLevel.REGULAR && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h4 className="text-sm font-medium text-gray-500 uppercase">States</h4>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">24</p>
+                    <p className="mt-1 text-sm text-gray-600">States with presence</p>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h4 className="text-sm font-medium text-gray-500 uppercase">Schools</h4>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">120</p>
+                    <p className="mt-1 text-sm text-gray-600">Different schools</p>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h4 className="text-sm font-medium text-gray-500 uppercase">Potential Users</h4>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">24K</p>
+                    <p className="mt-1 text-sm text-gray-600">Potential reach</p>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h4 className="text-sm font-medium text-gray-500 uppercase">Active Users</h4>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">TBD</p>
+                    <p className="mt-1 text-sm text-gray-600">Current users</p>
+                  </div>
+                </div>
+              )}
+
               {/* Tournament Schedule Section */}
               <div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Tournament Schedule</h3>
                 <TournamentSchedule tournaments={tournaments} />
               </div>
 
-              {/* All Tournaments Table */}
-              {tournaments.length > 0 && (
+              {/* All Tournaments Table - Only visible to super admin */}
+              {adminLevel === AdminLevel.SUPER && tournaments.length > 0 && (
                 <div className="bg-white rounded-lg shadow overflow-hidden">
                   <div className="px-4 py-5 sm:px-6">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">All Tournaments</h3>
