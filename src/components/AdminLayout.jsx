@@ -4,12 +4,14 @@ import AdminTournamentsPage from '../pages/AdminTournamentsPage';
 import AdminFraternitiesPage from '../pages/AdminFraternitiesPage';
 import AdminCollegesPage from '../pages/AdminCollegesPage';
 import AdminCalendarPage from '../pages/AdminCalendarPage';
+import AdminPartnersPage from '../pages/AdminPartnersPage';
+import { AdminLevel, signOut } from '../firebase/auth';
 
-const AdminLayout = () => {
+const AdminLayout = ({ adminLevel }) => {
   const location = useLocation();
   
   const handleLogout = () => {
-    localStorage.removeItem('adminSessionExpires');
+    signOut();
     window.location.reload();
   };
 
@@ -30,12 +32,7 @@ const AdminLayout = () => {
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  to="/admin/colleges"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/colleges')}`}
-                >
-                  Colleges
-                </Link>
+                {/* Common navigation items */}
                 <Link
                   to="/admin/tournaments"
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/tournaments')}`}
@@ -43,17 +40,35 @@ const AdminLayout = () => {
                   Tournaments
                 </Link>
                 <Link
-                  to="/admin/fraternities"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/fraternities')}`}
+                  to="/admin/partners"
+                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/partners')}`}
                 >
-                  Fraternities
+                  Partners
                 </Link>
-                <Link
-                  to="/admin/calendar"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/calendar')}`}
-                >
-                  Calendar
-                </Link>
+
+                {/* Super admin only navigation items */}
+                {adminLevel === AdminLevel.SUPER && (
+                  <>
+                    <Link
+                      to="/admin/colleges"
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/colleges')}`}
+                    >
+                      Colleges
+                    </Link>
+                    <Link
+                      to="/admin/fraternities"
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/fraternities')}`}
+                    >
+                      Fraternities
+                    </Link>
+                    <Link
+                      to="/admin/calendar"
+                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/calendar')}`}
+                    >
+                      Calendar
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex items-center">
@@ -71,11 +86,23 @@ const AdminLayout = () => {
       {/* Admin Content */}
       <main>
         <Routes>
-          <Route path="colleges" element={<AdminCollegesPage />} />
-          <Route path="tournaments" element={<AdminTournamentsPage />} />
-          <Route path="fraternities" element={<AdminFraternitiesPage />} />
-          <Route path="calendar" element={<AdminCalendarPage onLogout={handleLogout} />} />
-          <Route path="*" element={<Navigate to="colleges" replace />} />
+          {/* Common routes */}
+          <Route path="tournaments" element={<AdminTournamentsPage adminLevel={adminLevel} />} />
+          <Route path="partners" element={<AdminPartnersPage />} />
+          
+          {/* Super admin only routes */}
+          {adminLevel === AdminLevel.SUPER && (
+            <>
+              <Route path="colleges" element={<AdminCollegesPage />} />
+              <Route path="fraternities" element={<AdminFraternitiesPage />} />
+              <Route path="calendar" element={<AdminCalendarPage onLogout={handleLogout} />} />
+            </>
+          )}
+          
+          {/* Default route */}
+          <Route path="*" element={
+            <Navigate to={adminLevel === AdminLevel.SUPER ? "colleges" : "tournaments"} replace />
+          } />
         </Routes>
       </main>
     </div>

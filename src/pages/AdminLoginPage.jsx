@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInAsAdmin } from '../firebase/auth';
+import { signInAsAdmin, AdminLevel } from '../firebase/auth';
 
 const AdminLoginPage = ({ onLogin }) => {
   const [password, setPassword] = useState('');
@@ -9,8 +9,8 @@ const AdminLoginPage = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await signInAsAdmin(password);
-      onLogin();
+      const adminLevel = await signInAsAdmin(password);
+      onLogin(adminLevel);
     } catch (error) {
       console.error('Login error:', error);
       setError('Invalid password');
