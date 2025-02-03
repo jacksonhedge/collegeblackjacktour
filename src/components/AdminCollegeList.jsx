@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { COLLEGE_IMAGES } from '../data/collegeImages';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import FraternityCard from './FraternityCard';
 import AddFraternityForm from './AddFraternityForm';
 import FraternityForm from './FraternityForm';
 import CollegeAvatar from './CollegeAvatar';
+import AddCollegeForm from './AddCollegeForm';
 
 const AdminCollegeList = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,11 +16,15 @@ const AdminCollegeList = () => {
   const [selectedCollege, setSelectedCollege] = useState(null);
   const [selectedCollegeFraternities, setSelectedCollegeFraternities] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddFraternityForm, setShowAddFraternityForm] = useState(false);
+  const [showAddCollegeForm, setShowAddCollegeForm] = useState(false);
   const [editingFraternity, setEditingFraternity] = useState(null);
   const [loadingFraternities, setLoadingFraternities] = useState(false);
   const [editingConference, setEditingConference] = useState(false);
   const [savingConference, setSavingConference] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showFinalDeleteConfirm, setShowFinalDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const conferenceMap = {
     'A10': 'Atlantic 10',
@@ -50,44 +54,11 @@ const AdminCollegeList = () => {
   };
 
   const conferenceOrder = [
-    'A10',
-    'ACC',
-    'AEC',
-    'ASUN',
-    'BIG 10',
-    'BIG 12',
-    'BIG EAST',
-    'BIG SKY',
-    'BIG SOUTH',
-    'CAA',
-    'IVY',
-    'MAAC',
-    'MAC',
-    'Missouri Valley',
-    'MW',
-    'PAC - 12',
-    'Patriot League',
-    'SBC',
-    'SEC',
-    'SLC',
-    'SOCON',
-    'SUMMIT',
-    'WAC',
-    'WCC'
+    'A10', 'ACC', 'AEC', 'ASUN', 'BIG 10', 'BIG 12', 'BIG EAST', 'BIG SKY',
+    'BIG SOUTH', 'CAA', 'IVY', 'MAAC', 'MAC', 'Missouri Valley', 'MW',
+    'PAC - 12', 'Patriot League', 'SBC', 'SEC', 'SLC', 'SOCON', 'SUMMIT',
+    'WAC', 'WCC'
   ];
-
-  // Keep all the existing helper functions
-  const formatCollegeName = (filename) => {
-    return filename
-      .replace(/-/g, ' ')
-      .replace(/_/g, ' ')
-      .replace(/logo\.png$/, '')
-      .replace(/\.png$/, '')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ')
-      .trim();
-  };
 
   const getAbbreviatedConference = (fullName) => {
     return Object.entries(conferenceMap).find(([abbr, full]) => full === fullName)?.[0] || fullName;
@@ -97,93 +68,44 @@ const AdminCollegeList = () => {
     return conferenceMap[abbr] || abbr;
   };
 
-  const getConference = (imageName) => {
-    for (const [key, value] of Object.entries(conferenceMap)) {
-      if (imageName.includes(key)) {
-        return value;
-      }
-    }
-    return 'Unknown Conference';
-  };
-
   const abbreviatedConferences = conferenceOrder.map(abbr => ({
     abbr,
     full: conferenceMap[abbr] || abbr
   }));
 
-  // Get sorted and filtered colleges
   const sortedAndFilteredColleges = useMemo(() => {
-    let filtered = COLLEGE_IMAGES.filter(image => {
-      const name = formatCollegeName(image);
-      const collegeDoc = colleges.find(c => c.name === name);
-      const conference = collegeDoc ? collegeDoc.conference : getConference(image);
-      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesConference = !selectedConference || conference === selectedConference;
+    let filtered = colleges.filter(college => {
+      const matchesSearch = college.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesConference = !selectedConference || college.conference === selectedConference;
       return matchesSearch && matchesConference;
     });
 
-    // Apply sorting
     switch (sortMethod) {
       case 'conference':
-        // Predefined conference order
-        const conferenceOrder = [
-          'Southeastern Conference', // SEC
-          'Big 12 Conference',      // Big 12
-          'Big Ten Conference',     // Big 10
-          'Atlantic Coast Conference', // ACC
-          'Atlantic 10',           // A10
-          'Mid-American Conference' // MAC
-        ];
-        
-        // Sort by predefined order first, then by size for remaining conferences
-        const conferenceSizes = {};
-        filtered.forEach(image => {
-          const conference = getConference(image);
-          conferenceSizes[conference] = (conferenceSizes[conference] || 0) + 1;
-        });
-        
         return filtered.sort((a, b) => {
-          const confA = getConference(a);
-          const confB = getConference(b);
-          
-          const indexA = conferenceOrder.indexOf(confA);
-          const indexB = conferenceOrder.indexOf(confB);
-          
-          // If both conferences are in the predefined order, use that order
-          if (indexA !== -1 && indexB !== -1) {
-            return indexA - indexB;
-          }
-          // If only one conference is in the predefined order, it should come first
-          if (indexA !== -1) return -1;
-          if (indexB !== -1) return 1;
-          // For all other conferences, sort by size
-          return conferenceSizes[confB] - conferenceSizes[confA];
+          const confA = a.conference || 'Unknown Conference';
+          const confB = b.conference || 'Unknown Conference';
+          return confA.localeCompare(confB);
         });
 
       case 'alpha':
-        // Sort alphabetically by college name
-        return filtered.sort((a, b) => {
-          const nameA = formatCollegeName(a);
-          const nameB = formatCollegeName(b);
-          return nameA.localeCompare(nameB);
-        });
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
 
       case 'fraternities':
-        // Sort by number of fraternities
         return filtered.sort((a, b) => {
-          const collegeA = colleges.find(c => c.name === formatCollegeName(a));
-          const collegeB = colleges.find(c => c.name === formatCollegeName(b));
-          const countA = collegeA?.fraternityCount || 0;
-          const countB = collegeB?.fraternityCount || 0;
-          return countB - countA;
+          // First sort by scheduled count
+          const scheduledDiff = (b.scheduledCount || 0) - (a.scheduledCount || 0);
+          if (scheduledDiff !== 0) return scheduledDiff;
+          
+          // Then sort by fraternity count
+          return (b.fraternityCount || 0) - (a.fraternityCount || 0);
         });
 
       default:
         return filtered;
     }
-  }, [COLLEGE_IMAGES, colleges, searchTerm, selectedConference, sortMethod]);
+  }, [colleges, searchTerm, selectedConference, sortMethod]);
 
-  // Keep all the existing effects and handlers
   useEffect(() => {
     fetchColleges();
   }, []);
@@ -194,16 +116,20 @@ const AdminCollegeList = () => {
       const collegesRef = collection(db, 'colleges');
       const snapshot = await getDocs(collegesRef);
       
-      // Get all colleges with their basic data
       const collegeData = await Promise.all(snapshot.docs.map(async doc => {
         const collegeId = doc.id;
         const fraternitiesRef = collection(db, 'colleges', collegeId, 'fraternities');
         const fraternitiesSnapshot = await getDocs(fraternitiesRef);
+        const fraternities = fraternitiesSnapshot.docs.map(fDoc => ({
+          id: fDoc.id,
+          ...fDoc.data()
+        }));
         
         return {
           id: collegeId,
           ...doc.data(),
-          fraternityCount: fraternitiesSnapshot.docs.length
+          fraternityCount: fraternities.length,
+          scheduledCount: fraternities.filter(f => f.status === 'scheduled').length
         };
       }));
       
@@ -215,53 +141,20 @@ const AdminCollegeList = () => {
     }
   };
 
-  const createCollegeId = (name) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
-
-  const handleCollegeClick = async (imageName) => {
-    const name = formatCollegeName(imageName);
-    const conference = getConference(imageName);
-    setSelectedCollege({ name, conference, imageName });
+  const handleCollegeClick = async (college) => {
+    setSelectedCollege(college);
     setShowModal(true);
     setLoadingFraternities(true);
     
     try {
-      const collegeId = createCollegeId(name);
-      const collegeRef = doc(db, 'colleges', collegeId);
-      const collegeDoc = await getDoc(collegeRef);
-      
-      const fraternitiesRef = collection(db, 'colleges', collegeId, 'fraternities');
+      const fraternitiesRef = collection(db, 'colleges', college.id, 'fraternities');
       const fraternitiesSnapshot = await getDocs(fraternitiesRef);
       const fraternitiesData = fraternitiesSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      if (!collegeDoc.exists()) {
-        await setDoc(collegeRef, {
-          name,
-          conference,
-          logoPath: `/college-logos/${imageName}`,
-          fraternityCount: fraternitiesData.length
-        });
-        await fetchColleges();
-      } else {
-        setSelectedCollege(prev => ({
-          ...prev,
-          conference: collegeDoc.data().conference || conference
-        }));
-      }
-
       setSelectedCollegeFraternities(fraternitiesData);
-
-      await updateDoc(collegeRef, {
-        fraternityCount: fraternitiesData.length
-      });
-      await fetchColleges();
     } catch (err) {
       console.error('Error fetching fraternities:', err);
     } finally {
@@ -271,8 +164,20 @@ const AdminCollegeList = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Header section */}
       <div className="mb-8 space-y-4 bg-white p-6 rounded-lg shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">All Available Colleges</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">All Available Colleges</h1>
+          <button
+            onClick={() => setShowAddCollegeForm(true)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add College
+          </button>
+        </div>
         
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search Input */}
@@ -360,36 +265,49 @@ const AdminCollegeList = () => {
 
       {/* College Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {sortedAndFilteredColleges.map((image, index) => {
-          const name = formatCollegeName(image);
-          const collegeDoc = colleges.find(c => c.name === name);
-          const conference = collegeDoc ? collegeDoc.conference : getConference(image);
-          
-          return (
-            <div
-              key={index}
-              onClick={() => handleCollegeClick(image)}
-              className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6 flex flex-col items-center h-52 cursor-pointer hover:shadow-md transition-all duration-200 ease-in-out transform hover:-translate-y-1 relative"
-            >
-              <CollegeAvatar
-                name={name}
-                logoUrl={`/college-logos/${image}`}
-                className="w-20 h-20 mb-4"
-              />
-              <h2 className="text-lg font-semibold text-gray-900 text-center line-clamp-2 mb-2">{name}</h2>
-              <p className="text-sm text-gray-600">{getAbbreviatedConference(conference)}</p>
-              <div className="absolute bottom-4 right-4 bg-blue-50 px-3 py-1 rounded-full">
+        {sortedAndFilteredColleges.map((college) => (
+          <div
+            key={college.id}
+            onClick={() => handleCollegeClick(college)}
+            className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100 p-6 flex flex-col items-center h-52 cursor-pointer hover:shadow-md transition-all duration-200 ease-in-out transform hover:-translate-y-1 relative"
+          >
+            {/* Scheduled Events Counter */}
+            <div className="absolute top-2 left-2 bg-green-100 px-2 py-1 rounded-full">
+              <p className="text-sm font-medium text-green-600">
                 {loadingCounts ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
                 ) : (
-                  <p className="text-sm font-medium text-blue-600">
-                    {collegeDoc?.fraternityCount || 0} {(collegeDoc?.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
-                  </p>
+                  <>{college.scheduledCount || 0} Scheduled</>
                 )}
-              </div>
+              </p>
             </div>
-          );
-        })}
+            <CollegeAvatar
+              name={college.name}
+              className="w-20 h-20 mb-4"
+              logoUrl={college.logoUrl}
+              onLogoChange={(newLogoUrl) => {
+                setColleges(prevColleges => 
+                  prevColleges.map(c => 
+                    c.id === college.id
+                      ? { ...c, logoUrl: newLogoUrl }
+                      : c
+                  )
+                );
+              }}
+            />
+            <h2 className="text-lg font-semibold text-gray-900 text-center line-clamp-2 mb-2">{college.name}</h2>
+            <p className="text-sm text-gray-600">{getAbbreviatedConference(college.conference || 'Unknown Conference')}</p>
+            <div className="absolute bottom-4 right-4 bg-blue-50 px-3 py-1 rounded-full">
+              {loadingCounts ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              ) : (
+                <p className="text-sm font-medium text-blue-600">
+                  {college.fraternityCount || 0} {(college.fraternityCount === 1) ? 'Fraternity' : 'Fraternities'}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* College Details Modal */}
@@ -403,7 +321,7 @@ const AdminCollegeList = () => {
                     {selectedCollege?.name} - Fraternity Details
                   </h2>
                   <button
-                    onClick={() => setShowAddForm(true)}
+                    onClick={() => setShowAddFraternityForm(true)}
                     className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center"
                   >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,8 +344,21 @@ const AdminCollegeList = () => {
                 <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg">
                   <CollegeAvatar
                     name={selectedCollege.name}
-                    logoUrl={`/college-logos/${selectedCollege.imageName}`}
                     className="w-20 h-20"
+                    logoUrl={selectedCollege.logoUrl}
+                    onLogoChange={(newLogoUrl) => {
+                      setSelectedCollege(prev => ({
+                        ...prev,
+                        logoUrl: newLogoUrl
+                      }));
+                      setColleges(prevColleges => 
+                        prevColleges.map(college => 
+                          college.id === selectedCollege.id
+                            ? { ...college, logoUrl: newLogoUrl }
+                            : college
+                        )
+                      );
+                    }}
                   />
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{selectedCollege.name}</h3>
@@ -456,8 +387,7 @@ const AdminCollegeList = () => {
                                 onClick={async () => {
                                   setSavingConference(true);
                                   try {
-                                    const collegeId = createCollegeId(selectedCollege.name);
-                                    const collegeRef = doc(db, 'colleges', collegeId);
+                                    const collegeRef = doc(db, 'colleges', selectedCollege.id);
                                     await updateDoc(collegeRef, {
                                       conference: selectedCollege.conference
                                     });
@@ -557,23 +487,57 @@ const AdminCollegeList = () => {
                     </div>
                   ) : selectedCollegeFraternities.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {selectedCollegeFraternities.map(fraternity => (
+                      {[...selectedCollegeFraternities]
+                        .sort((a, b) => {
+                          // First prioritize scheduled fraternities
+                          if (a.status === 'scheduled' && b.status !== 'scheduled') return -1;
+                          if (b.status === 'scheduled' && a.status !== 'scheduled') return 1;
+                          
+                          // Then prioritize fraternities with Google forms
+                          const aHasForm = Boolean(a.signupFormUrl);
+                          const bHasForm = Boolean(b.signupFormUrl);
+                          if (aHasForm && !bHasForm) return -1;
+                          if (bHasForm && !aHasForm) return 1;
+                          
+                          // If both have same status and form presence, maintain original order
+                          return 0;
+                        })
+                        .map(fraternity => (
                         <FraternityCard
                           key={fraternity.id}
-                          fraternity={fraternity}
-                          onEdit={() => setEditingFraternity(fraternity)}
+                          fraternity={{
+                            ...fraternity,
+                            collegeId: selectedCollege.id
+                          }}
+                          collegeName={selectedCollege.name}
+                          onEdit={() => {
+                    setEditingFraternity({
+                      ...fraternity,
+                      collegeId: selectedCollege.id
+                    });
+                  }}
                           onDelete={async () => {
                             try {
-                              const collegeId = createCollegeId(selectedCollege.name);
-                              const fraternityRef = doc(db, 'colleges', collegeId, 'fraternities', fraternity.id);
+                              const fraternityRef = doc(db, 'colleges', selectedCollege.id, 'fraternities', fraternity.id);
                               await deleteDoc(fraternityRef);
                               
-                              const collegeRef = doc(db, 'colleges', collegeId);
+                              const collegeRef = doc(db, 'colleges', selectedCollege.id);
+                              // Get updated counts after deletion
+                              const fraternitiesRef = collection(db, 'colleges', selectedCollege.id, 'fraternities');
+                              const fraternitiesSnapshot = await getDocs(fraternitiesRef);
+                              const fraternities = fraternitiesSnapshot.docs.map(doc => ({
+                                id: doc.id,
+                                ...doc.data()
+                              }));
+
                               await updateDoc(collegeRef, {
-                                fraternityCount: selectedCollegeFraternities.length - 1
+                                fraternityCount: fraternities.length,
+                                scheduledCount: fraternities.filter(f => f.status === 'scheduled').length
                               });
                               
-                              handleCollegeClick(selectedCollege.imageName);
+                              // Refresh all colleges to update counts
+                              await fetchColleges();
+                              handleCollegeClick(selectedCollege);
                             } catch (error) {
                               console.error('Error deleting fraternity:', error);
                               alert('Error deleting fraternity. Please try again.');
@@ -589,33 +553,164 @@ const AdminCollegeList = () => {
                   )}
                 </div>
               </div>
+
+              {/* Delete College Button */}
+              <div className="mt-8 flex justify-end">
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete College
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Fraternity Edit Modal */}
-      {editingFraternity && (
-        <FraternityForm
-          fraternity={editingFraternity}
-          collegeName={selectedCollege.name}
-          onClose={() => setEditingFraternity(null)}
-          onSuccess={() => {
-            setEditingFraternity(null);
-            handleCollegeClick(selectedCollege.imageName);
-          }}
-        />
+      {/* First Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Delete College?</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete {selectedCollege?.name}? This will also delete all associated fraternities.
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setShowFinalDeleteConfirm(true);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Final Delete Confirmation Modal */}
+      {showFinalDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-red-600 mb-4">Final Warning</h3>
+            <p className="text-gray-600 mb-6">
+              This action cannot be undone. Type <span className="font-bold">{selectedCollege?.name}</span> to confirm deletion.
+            </p>
+            <input
+              type="text"
+              className="w-full px-4 py-2 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              placeholder="Type college name to confirm"
+              onChange={(e) => {
+                if (e.target.value === selectedCollege?.name) {
+                  setDeleting(true);
+                  // Delete all fraternities first
+                  const deleteFraternities = async () => {
+                    try {
+                      // Delete all fraternities
+                      const batch = writeBatch(db);
+                      selectedCollegeFraternities.forEach((fraternity) => {
+                        const fraternityRef = doc(db, 'colleges', selectedCollege.id, 'fraternities', fraternity.id);
+                        batch.delete(fraternityRef);
+                      });
+                      await batch.commit();
+
+                      // Delete the college
+                      const collegeRef = doc(db, 'colleges', selectedCollege.id);
+                      await deleteDoc(collegeRef);
+
+                      setShowFinalDeleteConfirm(false);
+                      setShowModal(false);
+                      fetchColleges();
+                    } catch (error) {
+                      console.error('Error deleting college:', error);
+                      alert('Error deleting college. Please try again.');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  };
+                  deleteFraternities();
+                }
+              }}
+            />
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setShowFinalDeleteConfirm(false);
+                  setDeleting(false);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={true}
+              >
+                {deleting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Deleting...
+                  </div>
+                ) : (
+                  'Delete College'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add College Form Modal */}
+      {showAddCollegeForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <AddCollegeForm
+              onClose={() => setShowAddCollegeForm(false)}
+              onSuccess={() => {
+                setShowAddCollegeForm(false);
+                fetchColleges();
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {/* Add Fraternity Modal */}
-      {showAddForm && (
+      {showAddFraternityForm && (
         <AddFraternityForm
+          collegeId={selectedCollege.id}
           collegeName={selectedCollege.name}
           onSuccess={() => {
-            setShowAddForm(false);
-            handleCollegeClick(selectedCollege.imageName);
+            setShowAddFraternityForm(false);
+            handleCollegeClick(selectedCollege);
           }}
-          onClose={() => setShowAddForm(false)}
+          onClose={() => setShowAddFraternityForm(false)}
+        />
+      )}
+
+      {/* Edit Fraternity Modal */}
+      {editingFraternity && (
+        <FraternityForm
+          fraternity={editingFraternity}
+          collegeId={selectedCollege.id}
+          onSuccess={() => {
+            setEditingFraternity(null);
+            handleCollegeClick(selectedCollege);
+          }}
+          onClose={() => setEditingFraternity(null)}
         />
       )}
     </div>
