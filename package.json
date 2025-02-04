@@ -11,9 +11,8 @@
     "upload-logos": "node src/firebase/uploadLogos.js",
     "upload-logos:admin": "node src/firebase/admin-upload.js",
     "server": "node src/server/server.js",
-    "start": "node src/server/server.js",
-    "postinstall": "npm run build",
-    "heroku-postbuild": "npm run build"
+    "start": "npm run build && node src/server/server.js",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.2",

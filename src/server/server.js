@@ -7,8 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 4000;
-const host = process.env.HOST || '0.0.0.0';
+const port = process.env.PORT || 3000;
 
 // Add middleware to parse JSON and form data
 app.use(express.json());
@@ -38,8 +37,8 @@ app.get('*', (req, res) => {
 });
 
 // Start the server
-const server = app.listen(port, host, () => {
-  console.log(`Server running on http://${host}:${port}`);
+const server = app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
   console.log('Available routes:');
   console.log('- POST /api/upload');
   console.log('- GET /api/getUrl');
