@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const EventScheduleForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
@@ -22,7 +22,30 @@ const EventScheduleForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
         createdAt: new Date().toISOString(),
       };
 
+      // Create the event
       await addDoc(collection(db, 'events'), eventData);
+
+      // Update fraternity status to scheduled
+      const fraternityRef = doc(db, 'colleges', fraternity.collegeId, 'fraternities', fraternity.id);
+      await updateDoc(fraternityRef, {
+        status: 'scheduled'
+      });
+
+      // Get updated count of scheduled fraternities
+      const fraternitiesRef = collection(db, 'colleges', fraternity.collegeId, 'fraternities');
+      const fraternitiesSnapshot = await getDocs(fraternitiesRef);
+      const fraternities = fraternitiesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      const scheduledCount = fraternities.filter(f => f.status === 'scheduled').length;
+
+      // Update college scheduled count
+      const collegeRef = doc(db, 'colleges', fraternity.collegeId);
+      await updateDoc(collegeRef, {
+        scheduledCount
+      });
+
       onSuccess();
     } catch (error) {
       console.error('Error scheduling event:', error);

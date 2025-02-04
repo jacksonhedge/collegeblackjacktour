@@ -1,4 +1,4 @@
-import { adminDb, adminStorage } from './admin.js';
+import { adminDb } from './admin.js';
 import { collegeNames } from './collegeNames.js';
 import { COLLEGE_IMAGES } from '../data/collegeImages.js';
 
@@ -118,22 +118,10 @@ export const initializeColleges = async () => {
         }
 
         const id = createCollegeId(name);
-        // Construct the Firebase Storage URL with proper encoding
-        // Get the download URL from Firebase Storage
-        const logoRef = adminStorage.bucket().file(`college-logos/${imageName}`);
-        const [signedUrl] = await logoRef.getSignedUrl({
-          action: 'read',
-          expires: '03-01-2500' // Far future expiration
-        });
-        const logoUrl = signedUrl;
-        console.log(`Processing college: ${name}`);
-        console.log(`Setting URL for ${name}: ${logoUrl}`);
-
         // Add college to Firestore with error handling
         try {
           await adminDb.collection('colleges').doc(id).set({
-            name,
-            logoUrl
+            name
           });
           console.log(`Successfully added college to Firestore: ${name}`);
         } catch (error) {

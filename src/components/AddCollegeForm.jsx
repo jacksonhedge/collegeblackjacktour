@@ -4,8 +4,6 @@ import { db } from '../firebase/config';
 
 const AddCollegeForm = ({ onClose, onSuccess }) => {
   const [name, setName] = useState('');
-  const [conference, setConference] = useState('');
-  const [logoPath, setLogoPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -17,8 +15,6 @@ const AddCollegeForm = ({ onClose, onSuccess }) => {
     try {
       const collegeData = {
         name,
-        conference,
-        logoPath: logoPath || null,
         fraternityCount: 0,
       };
 
@@ -69,33 +65,6 @@ const AddCollegeForm = ({ onClose, onSuccess }) => {
             />
           </div>
 
-          <div>
-            <label htmlFor="conference" className="block text-sm font-medium text-gray-700 mb-1">
-              Conference
-            </label>
-            <input
-              type="text"
-              id="conference"
-              value={conference}
-              onChange={(e) => setConference(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="logoPath" className="block text-sm font-medium text-gray-700 mb-1">
-              Logo Path (optional)
-            </label>
-            <input
-              type="text"
-              id="logoPath"
-              value={logoPath}
-              onChange={(e) => setLogoPath(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="/college-logos/conference/college-name-logo.png"
-            />
-          </div>
 
           <div className="flex justify-end space-x-3 pt-4">
             <button

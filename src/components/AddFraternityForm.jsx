@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { collection, addDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { fraternityList } from '../data/fraternityList';
 
-const AddFraternityForm = ({ collegeName, onSuccess, onClose }) => {
+const AddFraternityForm = ({ collegeId, collegeName, onSuccess, onClose }) => {
   const [selectedFraternity, setSelectedFraternity] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -13,28 +13,28 @@ const AddFraternityForm = ({ collegeName, onSuccess, onClose }) => {
 
     setLoading(true);
     try {
-      const normalizedCollegeId = collegeName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-      const fraternitiesRef = collection(db, 'colleges', normalizedCollegeId, 'fraternities');
+      const fraternitiesRef = collection(db, 'colleges', collegeId, 'fraternities');
       
       // Add the fraternity
-      await addDoc(fraternitiesRef, {
+      const fraternityDoc = await addDoc(fraternitiesRef, {
         name: selectedFraternity,
         status: 'outreached',
         createdAt: new Date().toISOString()
       });
 
-      // Update college fraternity count
-      const collegeRef = doc(db, 'colleges', normalizedCollegeId);
-      const collegeDoc = await getDoc(collegeRef);
-      if (collegeDoc.exists()) {
-        await updateDoc(collegeRef, {
-          fraternityCount: (collegeDoc.data().fraternityCount || 0) + 1
-        });
-      }
+      // Get all fraternities to calculate counts
+      const fraternitiesSnapshot = await getDocs(fraternitiesRef);
+      const fraternities = fraternitiesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Update college with new counts
+      const collegeRef = doc(db, 'colleges', collegeId);
+      await updateDoc(collegeRef, {
+        fraternityCount: fraternities.length,
+        scheduledCount: fraternities.filter(f => f.status === 'scheduled').length
+      });
 
       onSuccess();
     } catch (error) {

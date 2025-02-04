@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { getCollegeImageURL } from '../firebase/storage';
+import { getCollegeLogo } from '../data/collegeImages';
+import CollegeAvatar from './CollegeAvatar';
 
 const TEXAS_COLLEGES = [
   'texas-tech-red-raiders',
@@ -34,18 +35,17 @@ const TournamentCollegeList = () => {
             }))
             .filter(frat => frat.id !== 'placeholder'); // Filter out placeholder entries
 
-          // Get college logo
-          let logoUrl = null;
-          try {
-            logoUrl = await getCollegeImageURL(collegeId);
-          } catch (error) {
-            console.error(`Error getting logo URL for ${collegeId}:`, error);
-          }
+          // Get college name in proper format
+          const collegeName = collegeId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+          
+          // Get college document to check for custom logo
+          const collegeDoc = await getDocs(collection(db, 'colleges'));
+          const collegeData = collegeDoc.docs.find(doc => doc.id === collegeId)?.data() || {};
 
           collegesData[collegeId] = {
             id: collegeId,
-            name: collegeId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-            logoUrl,
+            name: collegeName,
+            logoUrl: collegeData.logoUrl,
             fraternities,
             fraternityCount: fraternities.length
           };
@@ -81,19 +81,11 @@ const TournamentCollegeList = () => {
             className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden"
           >
             <div className="h-48 bg-gray-100 flex items-center justify-center p-4">
-              {college.logoUrl ? (
-                <img
-                  src={college.logoUrl}
-                  alt={`${college.name} logo`}
-                  className="max-h-full max-w-full object-contain"
-                />
-              ) : (
-                <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-600">
-                    {college.name.split(' ').map(word => word[0]).join('')}
-                  </span>
-                </div>
-              )}
+              <CollegeAvatar
+                name={college.name}
+                className="w-32 h-32"
+                logoUrl={college.logoUrl}
+              />
             </div>
             <div className="p-4">
               <h3 className="font-semibold text-lg text-gray-900 mb-4">{college.name}</h3>

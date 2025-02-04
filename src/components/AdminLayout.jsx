@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import AdminTournamentsPage from '../pages/AdminTournamentsPage';
 import AdminFraternitiesPage from '../pages/AdminFraternitiesPage';
 import AdminCollegesPage from '../pages/AdminCollegesPage';
 import AdminCalendarPage from '../pages/AdminCalendarPage';
@@ -32,20 +31,6 @@ const AdminLayout = ({ adminLevel }) => {
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {/* Common navigation items */}
-                <Link
-                  to="/admin/tournaments"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/tournaments')}`}
-                >
-                  Tournaments
-                </Link>
-                <Link
-                  to="/admin/partners"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/partners')}`}
-                >
-                  Partners
-                </Link>
-
                 {/* Super admin only navigation items */}
                 {adminLevel === AdminLevel.SUPER && (
                   <>
@@ -71,7 +56,13 @@ const AdminLayout = ({ adminLevel }) => {
                 )}
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/admin/partners"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${isActive('/partners')}`}
+              >
+                Partners
+              </Link>
               <button
                 onClick={handleLogout}
                 className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -87,7 +78,6 @@ const AdminLayout = ({ adminLevel }) => {
       <main>
         <Routes>
           {/* Common routes */}
-          <Route path="tournaments" element={<AdminTournamentsPage adminLevel={adminLevel} />} />
           <Route path="partners" element={<AdminPartnersPage />} />
           
           {/* Super admin only routes */}
@@ -100,9 +90,7 @@ const AdminLayout = ({ adminLevel }) => {
           )}
           
           {/* Default route */}
-          <Route path="*" element={
-            <Navigate to={adminLevel === AdminLevel.SUPER ? "colleges" : "tournaments"} replace />
-          } />
+          <Route path="*" element={<Navigate to="colleges" replace />} />
         </Routes>
       </main>
     </div>

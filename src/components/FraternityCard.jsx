@@ -3,6 +3,10 @@ import EventScheduleForm from './EventScheduleForm';
 
 const FraternityCard = ({ fraternity, onClick, onEdit, onDelete, collegeName }) => {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showFinalDeleteConfirm, setShowFinalDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'in contact':
@@ -23,13 +27,26 @@ const FraternityCard = ({ fraternity, onClick, onEdit, onDelete, collegeName }) 
       <div className="flex justify-between items-start mb-4 relative">
         <div className="flex-grow">
           <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">{fraternity.name}</h3>
-              {fraternity.chapterName && (
-                <p className="text-sm text-gray-600">{fraternity.chapterName}</p>
+            <div className="flex items-center gap-4">
+              {fraternity.logoUrl ? (
+                <img 
+                  src={fraternity.logoUrl} 
+                  alt={`${fraternity.name} logo`}
+                  className="w-12 h-12 object-contain"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 text-xs">{fraternity.name?.charAt(0) || '?'}</span>
+                </div>
               )}
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{fraternity.name}</h3>
+                {fraternity.chapterName && (
+                  <p className="text-sm text-gray-600">{fraternity.chapterName}</p>
+                )}
+              </div>
             </div>
-          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -45,9 +62,7 @@ const FraternityCard = ({ fraternity, onClick, onEdit, onDelete, collegeName }) 
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm('Are you sure you want to delete this fraternity?')) {
-                  onDelete();
-                }
+                setShowDeleteConfirm(true);
               }}
               className="p-1 hover:bg-gray-100 rounded-full"
               title="Delete fraternity"
@@ -209,17 +224,99 @@ const FraternityCard = ({ fraternity, onClick, onEdit, onDelete, collegeName }) 
         </div>
 
         {showScheduleForm && (
-          <EventScheduleForm
-            fraternity={fraternity}
-            collegeName={collegeName}
-            onClose={() => setShowScheduleForm(false)}
-            onSuccess={() => {
-              setShowScheduleForm(false);
-              // You might want to refresh the data here
-            }}
-          />
+            <EventScheduleForm
+              fraternity={{
+                ...fraternity,
+                collegeId: fraternity.collegeId
+              }}
+              collegeName={collegeName}
+              onClose={() => setShowScheduleForm(false)}
+              onSuccess={() => {
+                setShowScheduleForm(false);
+                window.location.reload(); // Refresh to update all counts
+              }}
+            />
         )}
       </div>
+
+      {/* First Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Delete Fraternity?</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete {fraternity.name}?
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setShowFinalDeleteConfirm(true);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Final Delete Confirmation Modal */}
+      {showFinalDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-red-600 mb-4">Final Warning</h3>
+            <p className="text-gray-600 mb-6">
+              This action cannot be undone. Type <span className="font-bold">{fraternity.name}</span> to confirm deletion.
+            </p>
+            <input
+              type="text"
+              className="w-full px-4 py-2 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+              placeholder="Type fraternity name to confirm"
+              onChange={(e) => {
+                if (e.target.value === fraternity.name) {
+                  setDeleting(true);
+                  onDelete();
+                  setShowFinalDeleteConfirm(false);
+                  setDeleting(false);
+                }
+              }}
+            />
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setShowFinalDeleteConfirm(false);
+                  setDeleting(false);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={true}
+              >
+                {deleting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Deleting...
+                  </div>
+                ) : (
+                  'Delete Fraternity'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

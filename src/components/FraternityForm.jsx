@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
-const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
+const FraternityForm = ({ fraternity, collegeId, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: fraternity.name || '',
@@ -22,7 +22,8 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
     philanthropyNumber: fraternity.philanthropyNumber || '',
     philanthropyContacted: fraternity.philanthropyContacted || false,
     signupFormUrl: fraternity.signupFormUrl || '',
-    signupSheetUrl: fraternity.signupSheetUrl || ''
+    signupSheetUrl: fraternity.signupSheetUrl || '',
+    paymentLink: fraternity.paymentLink || ''
   });
 
   const handleInputChange = (e) => {
@@ -38,15 +39,30 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
     setLoading(true);
 
     try {
-      const normalizedCollegeId = collegeName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-      const fraternityRef = doc(db, 'colleges', normalizedCollegeId, 'fraternities', fraternity.id);
-      console.log('Updating document at path:', fraternityRef.path);
+      const fraternityRef = doc(db, 'colleges', collegeId, 'fraternities', fraternity.id);
       await updateDoc(fraternityRef, formData);
-      console.log('Successfully updated fraternity document');
+
+      // If status changed to/from scheduled, update college's scheduled count
+      if (formData.status !== fraternity.status && 
+          (formData.status === 'scheduled' || fraternity.status === 'scheduled')) {
+        // Get all fraternities to calculate new scheduled count
+        const fraternitiesRef = collection(db, 'colleges', collegeId, 'fraternities');
+        const fraternitiesSnapshot = await getDocs(fraternitiesRef);
+        const fraternities = fraternitiesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // Calculate new scheduled count
+        const scheduledCount = fraternities.filter(f => 
+          f.id === fraternity.id ? formData.status === 'scheduled' : f.status === 'scheduled'
+        ).length;
+
+        // Update college with new scheduled count
+        const collegeRef = doc(db, 'colleges', collegeId);
+        await updateDoc(collegeRef, { scheduledCount });
+      }
+
       onSuccess();
     } catch (error) {
       console.error('Error updating fraternity:', error);
@@ -287,6 +303,35 @@ const FraternityForm = ({ fraternity, collegeName, onClose, onSuccess }) => {
                       <span className="ml-2 text-sm text-gray-600">Contacted</span>
                     </label>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Philanthropy & Payment */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Philanthropy & Payment</h3>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Philanthropy</label>
+                  <input
+                    type="text"
+                    name="philanthropy"
+                    value={formData.philanthropy}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="e.g., Wounded Warriors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Payment Link</label>
+                  <input
+                    type="url"
+                    name="paymentLink"
+                    value={formData.paymentLink}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="e.g., https://venmo.com/..."
+                  />
                 </div>
               </div>
             </div>

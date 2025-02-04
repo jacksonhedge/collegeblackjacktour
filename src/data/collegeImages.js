@@ -1,3 +1,11 @@
+// Function to get college logo path from public directory
+export const getCollegeLogo = (collegeName) => {
+  if (!collegeName) return '/default-college-logo.svg';
+  const cleanName = collegeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return `/college-logos/${cleanName}-logo.png`;
+};
+
+// Legacy array - keeping for reference
 export const COLLEGE_IMAGES = [
   'Abilene-Christian-Wildcats-logo.png',
   'Air_Force_Falcons_logo.png',

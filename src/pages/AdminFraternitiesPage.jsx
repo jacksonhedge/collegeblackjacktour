@@ -196,9 +196,7 @@ const AdminFraternitiesPage = () => {
             <ul className="divide-y divide-gray-200">
             {fraternities.map((fraternity) => (
               <li key={fraternity.id}>
-                <div className="px-4 py-4 sm:px-6 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => setSelectedFraternity(fraternity)}
-                >
+                <div className="px-4 py-4 sm:px-6 hover:bg-gray-50 cursor-pointer">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="text-sm font-medium text-blue-600">
@@ -207,6 +205,15 @@ const AdminFraternitiesPage = () => {
                       <div className="ml-4 text-sm text-gray-500">
                         {fraternity.name}
                       </div>
+                      <button
+                        onClick={() => setSelectedFraternity(fraternity)}
+                        className="ml-4 p-1 hover:bg-gray-100 rounded-full"
+                        title="Edit fraternity"
+                      >
+                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
                     </div>
                     <div>
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -218,20 +225,40 @@ const AdminFraternitiesPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-2 sm:flex sm:justify-between">
-                    <div className="sm:flex">
-                      <div className="flex items-center text-sm text-gray-500">
-                        <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        {fraternity.presidentName || 'No president listed'}
-                      </div>
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="flex items-center text-sm text-gray-500">
                       <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      {fraternity.joinDate ? new Date(fraternity.joinDate.seconds * 1000).toLocaleDateString() : 'No join date'}
+                      {fraternity.presidentName || 'No president listed'}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      {fraternity.philanthropy || 'No philanthropy listed'}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      {fraternity.paymentLink ? (
+                        <a 
+                          href={fraternity.paymentLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          Payment Link
+                        </a>
+                      ) : (
+                        <span className="flex items-center">
+                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          No payment link
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

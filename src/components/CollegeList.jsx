@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { getCollegeLogo } from '../data/collegeImages';
 import FraternityCard from './FraternityCard';
 import AddFraternityForm from './AddFraternityForm';
 import FraternityForm from './FraternityForm';
 import AddCollegeForm from './AddCollegeForm';
+import CollegeAvatar from './CollegeAvatar';
 
 // Helper function to normalize college name for Firestore ID
 const normalizeCollegeName = (name) => {
@@ -240,25 +242,11 @@ const CollegeList = () => {
               className="bg-white rounded-lg shadow-sm hover:shadow-md overflow-hidden cursor-pointer transition-all duration-200 ease-in-out transform hover:-translate-y-1 border border-gray-100 hover:border-gray-200"
             >
               <div className="p-6 flex flex-col items-center h-52 relative">
-                <div className="w-20 h-20 relative flex items-center justify-center bg-gray-50 rounded-md mb-4">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin opacity-0 transition-opacity duration-200" />
-                  </div>
-                  <img
-                    src={college?.logoPath || '/default-college-logo.svg'}
-                    alt={`${college?.name || 'College'} logo`}
-                    className="w-full h-full object-contain relative z-10 transition-opacity duration-200"
-                    onError={(e) => {
-                      e.target.src = '/default-college-logo.svg';
-                    }}
-                    onLoad={(e) => {
-                      e.target.parentElement.querySelector('.animate-spin').classList.add('opacity-0');
-                      e.target.classList.remove('opacity-0');
-                    }}
-                    loading="lazy"
-                    style={{ opacity: 0 }}
-                  />
-                </div>
+                <CollegeAvatar
+                name={college?.name || ''}
+                className="w-20 h-20 mb-4"
+                logoUrl={college?.logoUrl}
+              />
                 <h2 className="text-lg font-semibold text-gray-900 text-center line-clamp-2 mb-2">{college?.name || 'Unknown College'}</h2>
                 <p className="text-sm text-gray-600">{college?.conference || 'Unknown Conference'}</p>
                 <div className="absolute bottom-4 right-4 bg-blue-50 px-3 py-1 rounded-full">
@@ -274,7 +262,12 @@ const CollegeList = () => {
 
       {showModal && selectedCollege && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg w-[90vw] max-h-[90vh] overflow-y-auto resize-x min-w-[600px] max-w-[95vw] relative">
+            <div className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize">
+              <svg className="w-full h-full text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22 22H20V20H22V22ZM22 18H18V20H22V18ZM18 22H16V24H18V22ZM14 22H12V24H14V22ZM10 22H8V24H10V22ZM22 14H20V16H22V14ZM22 10H20V12H22V10ZM22 6H20V8H22V6Z" />
+              </svg>
+            </div>
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div className="flex justify-between items-center w-full">
@@ -303,23 +296,11 @@ const CollegeList = () => {
 
               <div className="grid grid-cols-1 gap-6 mb-6">
                 <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg">
-                  <div className="w-20 h-20 relative flex items-center justify-center">
-                    <img
-                      src={selectedCollege?.logoPath || '/default-college-logo.svg'}
-                      alt={`${selectedCollege?.name || 'College'} logo`}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        const altPath = selectedCollege?.conference && selectedCollege?.name
-                          ? `/college-logos/${selectedCollege.conference.replace(' ', '-')}/${selectedCollege.name.replace(/\s+/g, '-')}-logo.png`
-                          : '/default-college-logo.svg';
-                        if (e.target.src !== altPath) {
-                          e.target.src = altPath;
-                        } else {
-                          e.target.src = '/default-college-logo.svg';
-                        }
-                      }}
-                    />
-                  </div>
+                  <CollegeAvatar
+                    name={selectedCollege?.name || ''}
+                    className="w-20 h-20"
+                    logoUrl={selectedCollege?.logoUrl}
+                  />
                   <div>
                     <h3 className="text-xl font-bold text-gray-900">{selectedCollege?.name || 'Unknown College'}</h3>
                     <p className="text-gray-600">{selectedCollege?.conference || 'Unknown Conference'}</p>
@@ -335,7 +316,7 @@ const CollegeList = () => {
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                     </div>
                   ) : selectedCollegeFraternities.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {selectedCollegeFraternities.map(fraternity => (
                       <FraternityCard
                         key={fraternity?.id || Math.random()}
@@ -394,6 +375,7 @@ const CollegeList = () => {
           }}
         />
       )}
+
     </div>
   );
 };

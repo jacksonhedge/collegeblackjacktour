@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import Navbar from './components/Navbar';
-import TournamentsPage from './pages/TournamentsPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import CollegeList from './components/CollegeList';
 import AdminLayout from './components/AdminLayout';
@@ -54,8 +53,6 @@ function App() {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/colleges" element={<CollegeList />} />
-                <Route path="/tournaments" element={<TournamentsPage />} />
-                <Route path="/tournaments/:type" element={<TournamentsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </>

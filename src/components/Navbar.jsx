@@ -17,8 +17,8 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Navigation Items */}
-          <div className="flex items-center justify-between flex-1">
+          {/* Navigation Items - Left Side */}
+          <div className="flex items-center flex-1">
             <div className="flex space-x-8">
               <Link to="/" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
                 Home
@@ -43,19 +43,18 @@ const Navbar = () => {
                 </div>
               </div>
 
-              <Link to="/tournaments" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
-                Tournaments
-              </Link>
-
               {/* Info - Non-clickable */}
               <div className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed">
                 Info
               </div>
-              
-              {/* Partners - Non-clickable */}
-              <div className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed">
-                Partners
-              </div>
+            </div>
+          </div>
+
+          {/* Navigation Items - Right Side */}
+          <div className="flex items-center space-x-4">
+            {/* Partners - Non-clickable */}
+            <div className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed">
+              Partners
             </div>
           </div>
         </div>
