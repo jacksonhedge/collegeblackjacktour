@@ -7,7 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 4002;
+const port = process.env.PORT || 4000;
+const host = process.env.HOST || '0.0.0.0';
 
 // Add middleware to parse JSON and form data
 app.use(express.json());
@@ -37,10 +38,27 @@ app.get('*', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const server = app.listen(port, host, () => {
+  console.log(`Server running on http://${host}:${port}`);
   console.log('Available routes:');
   console.log('- POST /api/upload');
   console.log('- GET /api/getUrl');
   console.log('- All other routes serve the React app');
+});
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
 });
