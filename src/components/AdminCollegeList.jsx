@@ -8,7 +8,8 @@ import CollegeAvatar from './CollegeAvatar';
 import AddCollegeForm from './AddCollegeForm';
 
 const AdminCollegeList = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); // For colleges search
+  const [fraternitySearchTerm, setFraternitySearchTerm] = useState(''); // For fraternities search
   const [selectedConference, setSelectedConference] = useState('');
   const [colleges, setColleges] = useState([]);
   const [sortMethod, setSortMethod] = useState('fraternities');
@@ -313,7 +314,7 @@ const AdminCollegeList = () => {
       {/* College Details Modal */}
       {showModal && selectedCollege && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div className="flex justify-between items-center w-full">
@@ -480,14 +481,44 @@ const AdminCollegeList = () => {
                   </div>
                 </div>
 
+                {/* Fraternity Search */}
+                <div className="mb-6">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search fraternities..."
+                      value={fraternitySearchTerm}
+                      onChange={(e) => setFraternitySearchTerm(e.target.value)}
+                      className="w-full px-4 py-2 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <svg
+                      className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
                 <div>
                   {loadingFraternities ? (
                     <div className="flex justify-center items-center p-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                     </div>
                   ) : selectedCollegeFraternities.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                       {[...selectedCollegeFraternities]
+                        .filter(fraternity => 
+                          fraternity.name.toLowerCase().includes(fraternitySearchTerm.toLowerCase()) ||
+                          (fraternity.chapterName && fraternity.chapterName.toLowerCase().includes(fraternitySearchTerm.toLowerCase()))
+                        )
                         .sort((a, b) => {
                           // First prioritize scheduled fraternities
                           if (a.status === 'scheduled' && b.status !== 'scheduled') return -1;
