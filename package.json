@@ -11,7 +11,8 @@
     "upload-logos": "node src/firebase/uploadLogos.js",
     "upload-logos:admin": "node src/firebase/admin-upload.js",
     "server": "node src/server/server.js",
-    "start": "./build.sh"
+    "start": "node src/server/server.js",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.2",
@@ -19,7 +20,6 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "cors": "^2.8.5",
-    "esm": "^3.2.25",
     "express": "^4.18.2",
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",
