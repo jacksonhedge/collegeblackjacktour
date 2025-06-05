@@ -19,9 +19,9 @@ const AdminLayout = ({ adminLevel }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Admin Navigation */}
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow fixed top-0 left-0 right-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
@@ -75,7 +75,7 @@ const AdminLayout = ({ adminLevel }) => {
       </nav>
 
       {/* Admin Content */}
-      <main>
+      <main className="min-h-screen bg-gray-50 pt-16">
         <Routes>
           {/* Common routes */}
           <Route path="partners" element={<AdminPartnersPage />} />

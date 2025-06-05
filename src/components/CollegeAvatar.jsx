@@ -9,14 +9,12 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
   const [isLoading, setIsLoading] = useState(true);
   const [currentLogoUrl, setCurrentLogoUrl] = useState(logoUrl);
 
-  // Reset states and update current logo URL when logoUrl prop changes
   useEffect(() => {
     setImageError(false);
     setIsLoading(true);
     setCurrentLogoUrl(logoUrl);
   }, [logoUrl]);
 
-  // Fetch logo URL from Firestore if not provided
   useEffect(() => {
     const fetchLogoUrl = async () => {
       if (!logoUrl) {
@@ -37,7 +35,6 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
     fetchLogoUrl();
   }, [name, logoUrl]);
 
-  // Get initials from college name (up to 3 letters)
   const getInitials = (name) => {
     return name
       .split(/\s+/)
@@ -47,7 +44,6 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
       .toUpperCase();
   };
 
-  // Generate a consistent color based on the college name
   const getBackgroundColor = (name) => {
     const colors = [
       'bg-blue-500',
@@ -60,7 +56,6 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
       'bg-teal-500'
     ];
     
-    // Use the sum of character codes to pick a color
     const sum = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[sum % colors.length];
   };
@@ -68,27 +63,36 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
   const initials = getInitials(name);
   const bgColor = getBackgroundColor(name);
   
+  // Determine text size based on container size
+  const getTextSize = () => {
+    const containerSize = className.match(/w-(\d+)/)?.[1] || 16;
+    if (containerSize <= 8) return 'text-xs';
+    if (containerSize <= 12) return 'text-sm';
+    if (containerSize <= 16) return 'text-base';
+    if (containerSize <= 20) return 'text-lg';
+    return 'text-xl';
+  };
+
+  const spinnerSize = className.match(/w-(\d+)/)?.[1] <= 16 ? 'w-4 h-4' : 'w-8 h-8';
+  
   return (
     <div className={`relative group ${className}`}>
-      {/* Image container */}
       <div className={`relative flex items-center justify-center bg-gray-50 rounded-md w-full h-full ${imageError ? 'hidden' : ''}`}>
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+            <div className={`${spinnerSize} border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin`} />
           </div>
         )}
         <img
-          key={currentLogoUrl} // Force re-render when URL changes
+          key={currentLogoUrl}
           src={currentLogoUrl || getCollegeLogo(name)}
           alt={`${name} logo`}
-          className={`w-full h-full object-contain transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          className={`w-full h-full object-contain p-1 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
           onError={() => {
-            console.log('Image error for:', name);
             setImageError(true);
             setIsLoading(false);
           }}
           onLoad={() => {
-            console.log('Image loaded for:', name);
             setIsLoading(false);
             setImageError(false);
           }}
@@ -96,19 +100,17 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
         />
       </div>
 
-      {/* Fallback initials */}
       {imageError && (
         <div 
           className={`flex items-center justify-center rounded-md ${bgColor} w-full h-full`}
           title={name}
         >
-          <span className="text-white font-bold text-xl">
+          <span className={`text-white font-bold ${getTextSize()}`}>
             {initials}
           </span>
         </div>
       )}
 
-      {/* Hover overlay for upload */}
       <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 cursor-pointer rounded-md transition-opacity">
         <input 
           type="file" 
@@ -136,29 +138,20 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
               const collegeRef = doc(db, 'colleges', collegeId);
               const collegeDoc = await getDoc(collegeRef);
               
-              // Get existing college data or create new data
               const collegeData = collegeDoc.exists() ? collegeDoc.data() : {};
               
-              // Ensure we have valid data with defaults
               const updatedData = {
                 name,
                 conference: collegeData.conference || 'Unknown',
-                logoUrl: null // Will be updated after upload
+                logoUrl: null
               };
               
-              // Upload new logo
               const newLogoUrl = await uploadCollegeLogo(file, name, updatedData.conference);
-              
-              // Update the logo URL in our data
               updatedData.logoUrl = newLogoUrl;
               
-              // Update college document with all data
               await setDoc(collegeRef, updatedData, { merge: true });
-
-              // Update local state
               setCurrentLogoUrl(newLogoUrl);
 
-              // Notify parent component of the new logo URL
               if (onLogoChange) {
                 onLogoChange(newLogoUrl);
               }
@@ -172,7 +165,7 @@ const CollegeAvatar = ({ name, className = '', logoUrl = null, onLogoChange = nu
             }
           }}
         />
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className={`${className.match(/w-(\d+)/)?.[1] <= 16 ? 'w-4 h-4' : 'w-6 h-6'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </label>

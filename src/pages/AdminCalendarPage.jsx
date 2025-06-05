@@ -44,18 +44,13 @@ const AdminCalendarPage = ({ onLogout }) => {
       <div className="sticky top-0 z-10">
         <TournamentTicker tournaments={tournaments} />
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 py-8">
+      <div className="w-full flex-1">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Tournament Schedule</h2>
-              <TournamentSchedule tournaments={tournaments} />
-            </div>
-          </div>
+          <TournamentSchedule tournaments={tournaments} />
         )}
       </div>
     </div>
