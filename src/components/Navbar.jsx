@@ -24,10 +24,6 @@ const Navbar = () => {
                 Home
               </Link>
 
-              <Link to="/colleges" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
-                Colleges
-              </Link>
-
               {/* Shop - Non-clickable */}
               <div className="relative">
                 <div className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center cursor-not-allowed">
