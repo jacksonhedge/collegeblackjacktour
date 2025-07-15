@@ -14,7 +14,31 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
-# Run the deployment
+# Check for uncommitted changes and commit them
+if [[ -n $(git status -s) ]]; then
+    echo "📝 Uncommitted changes detected. Committing..."
+    git add -A
+    git commit -m "Deploy: Auto-commit before deployment $(date +'%Y-%m-%d %H:%M:%S')"
+fi
+
+# Push to GitHub (for Koyeb deployment)
+echo "📤 Pushing to GitHub..."
+git push origin main
+
+if [ $? -ne 0 ]; then
+    echo "⚠️  Git push failed. Attempting force push..."
+    git push origin main --force
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Git push failed! Please resolve conflicts manually."
+        exit 1
+    fi
+fi
+
+echo "✅ Pushed to GitHub successfully!"
+echo "🔄 Koyeb will auto-deploy from GitHub..."
+
+# Run the deployment to Firebase as backup/staging
 echo "🏗️  Building production bundle..."
 npm run build
 
@@ -23,14 +47,16 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "🚀 Deploying to Firebase..."
+echo "🚀 Deploying to Firebase (staging)..."
 firebase deploy --only hosting
 
 if [ $? -eq 0 ]; then
     echo "✅ Deployment successful!"
-    echo "🌐 Live at: https://collegeblackjacktour.firebaseapp.com"
-    open https://collegeblackjacktour.firebaseapp.com
+    echo "🌐 Firebase (staging): https://collegeblackjacktour.firebaseapp.com"
+    echo "🌐 Koyeb (production): https://collegecasinotour.com"
+    echo "📊 Monitor Koyeb deployment at: https://app.koyeb.com/"
+    open https://collegecasinotour.com
 else
-    echo "❌ Deployment failed!"
+    echo "❌ Firebase deployment failed!"
     exit 1
 fi
