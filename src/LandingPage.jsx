@@ -1,4 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { db } from './firebase/config';
+import EventCard from './components/EventCard';
+import EventRegistrationModal from './components/EventRegistrationModal';
 
 // Partners data
 const partners = [
@@ -17,10 +21,72 @@ const partners = [
 ];
 
 const LandingPage = () => {
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const q = query(
+        collection(db, 'events'),
+        where('showOnLandingPage', '==', true),
+        where('status', '==', 'upcoming'),
+        orderBy('date', 'asc')
+      );
+      
+      const snapshot = await getDocs(q);
+      const eventsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setEvents(eventsData.slice(0, 6)); // Show max 6 events
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      // If query fails, try without compound query
+      try {
+        const eventsRef = collection(db, 'events');
+        const snapshot = await getDocs(eventsRef);
+        const eventsData = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(event => event.showOnLandingPage === true && event.status === 'upcoming')
+          .sort((a, b) => {
+            const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+            const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+            return dateA - dateB;
+          });
+        setEvents(eventsData.slice(0, 6));
+      } catch (fallbackError) {
+        console.error('Fallback query also failed:', fallbackError);
+        setEvents([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+  };
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-700 via-gray-900 to-black animate-gradient-xy pt-16">
+    <div 
+      className="min-h-screen relative overflow-hidden pt-16"
+      style={{ 
+        backgroundImage: 'url("/cartoon-casino-bg.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Dark overlay for better readability */}
+      <div className="absolute inset-0 bg-black bg-opacity-50" />
+      
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-20 px-4">
+      <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-20 px-4">
         <div className="max-w-4xl w-full flex flex-col items-center space-y-12">
           <img 
             src="/CCT_Logo_1.png" 
@@ -33,8 +99,26 @@ const LandingPage = () => {
         </div>
       </div>
 
+      {/* Events Section - Show if events exist */}
+      {events.length > 0 && (
+        <div className="relative w-full bg-black/70 backdrop-blur-lg py-16">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Upcoming Events</h2>
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onClick={handleEventClick}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Partners Section */}
-      <div className="w-full bg-black/40 backdrop-blur-lg py-16">
+      <div className="relative w-full bg-black/70 backdrop-blur-lg py-16 mt-12">
         <h2 className="text-3xl font-bold text-white text-center mb-12">Our Partners</h2>
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -55,7 +139,7 @@ const LandingPage = () => {
       </div>
 
       {/* Info Section */}
-      <div className="w-full bg-black/60 backdrop-blur-lg py-12 px-4 mt-12">
+      <div className="relative w-full bg-black/80 backdrop-blur-lg py-12 px-4 mt-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
@@ -106,6 +190,14 @@ const LandingPage = () => {
           © {new Date().getFullYear()} Collegiate Casino League. All Rights Reserved.
         </div>
       </div>
+      
+      {/* Event Registration Modal */}
+      {selectedEvent && (
+        <EventRegistrationModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 };

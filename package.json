@@ -6,14 +6,21 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "vite preview --port $PORT --host 0.0.0.0",
     "lint": "eslint .",
     "preview": "vite preview",
     "upload-logos": "node src/firebase/uploadLogos.js",
-    "upload-logos:admin": "node src/firebase/admin-upload.js"
+    "upload-logos:admin": "node src/firebase/admin-upload.js",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy:all": "npm run build && firebase deploy",
+    "deploy:preview": "npm run build && firebase hosting:channel:deploy preview",
+    "deploy:quick": "./deploy.sh",
+    "deploy:koyeb": "./deploykoyeb"
   },
   "dependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
+    "date-fns": "^4.1.0",
     "esm": "^3.2.25",
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",

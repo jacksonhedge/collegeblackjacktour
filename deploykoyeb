@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Koyeb Deployment Script for CollegeBlackjackTour
+echo "🎰 CCT Koyeb Deploy Started..."
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    echo "❌ Error: package.json not found. Make sure you're in the project root directory."
+    exit 1
+fi
+
+# Build the production bundle
+echo "🏗️  Building production bundle..."
+npm run build
+
+# Check if build was successful
+if [ $? -ne 0 ]; then
+    echo "❌ Build failed!"
+    exit 1
+fi
+
+# Commit and push to GitHub (Koyeb will auto-deploy)
+echo "📦 Committing build changes..."
+git add .
+git commit -m "Deploy: Production build $(date +'%Y-%m-%d %H:%M:%S')"
+
+echo "🚀 Pushing to GitHub (Koyeb will auto-deploy)..."
+git push origin main
+
+echo "✅ Push complete!"
+echo "🌐 Koyeb will automatically deploy your changes"
+echo "📊 Monitor deployment at: https://app.koyeb.com/"
+echo "🔗 Your site will be updated at: https://collegecasinotour.com"

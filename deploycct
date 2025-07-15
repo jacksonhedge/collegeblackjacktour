@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# CollegeBlackjackTour Quick Deploy Command
+# Usage: /deploycct
+
+echo "🎰 CCT Quick Deploy Started..."
+
+# Navigate to project directory
+cd /Users/jacksonfitzgerald/Documents/CollegiateCasinoLeague/collegeblackjacktour
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    echo "❌ Error: Not in the CCT project directory"
+    exit 1
+fi
+
+# Run the deployment
+echo "🏗️  Building production bundle..."
+npm run build
+
+if [ $? -ne 0 ]; then
+    echo "❌ Build failed! Check errors above."
+    exit 1
+fi
+
+echo "🚀 Deploying to Firebase..."
+firebase deploy --only hosting
+
+if [ $? -eq 0 ]; then
+    echo "✅ Deployment successful!"
+    echo "🌐 Live at: https://collegeblackjacktour.firebaseapp.com"
+    open https://collegeblackjacktour.firebaseapp.com
+else
+    echo "❌ Deployment failed!"
+    exit 1
+fi

@@ -2,8 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import Navbar from './components/Navbar';
 import TournamentsPage from './pages/TournamentsPage';
+import EventsPage from './pages/EventsPage';
 import AdminLoginPage from './pages/AdminLoginPage';
-import CollegeList from './components/CollegeList';
 import AdminLayout from './components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { isAuthenticated as checkAuthStatus } from './firebase/auth';
@@ -43,9 +43,9 @@ function App() {
               <Navbar />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
-                <Route path="/colleges" element={<CollegeList />} />
                 <Route path="/tournaments" element={<TournamentsPage />} />
                 <Route path="/tournaments/:type" element={<TournamentsPage />} />
+                <Route path="/events/:status" element={<EventsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </>

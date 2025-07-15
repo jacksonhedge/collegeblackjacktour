@@ -21,7 +21,6 @@ const formatDate = (dateStr) => {
 
 const TournamentTicker = ({ tournaments }) => {
   if (!tournaments || tournaments.length === 0) {
-    console.log('No tournaments available');
     return null;
   }
 
@@ -29,10 +28,7 @@ const TournamentTicker = ({ tournaments }) => {
     tournament.status === 'scheduled' || tournament.status === 'upcoming'
   );
 
-  console.log('Scheduled tournaments:', scheduledTournaments);
-
   if (scheduledTournaments.length === 0) {
-    console.log('No scheduled tournaments');
     return null;
   }
 

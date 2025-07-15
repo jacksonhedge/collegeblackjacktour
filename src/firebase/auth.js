@@ -4,6 +4,9 @@ export const AdminLevel = {
   REGULAR: 'regular'
 };
 
+// Admin password
+const ADMIN_PASSWORD = 'B@nkroll2024!';
+
 // Check if user is authenticated and get their admin level
 export const isAuthenticated = () => {
   const expiresAt = localStorage.getItem('adminSessionExpires');
@@ -18,14 +21,10 @@ export const getAdminLevel = () => {
 export const signInAsAdmin = async (password) => {
   const expiresAt = new Date().getTime() + (30 * 60 * 1000); // 30 minutes
 
-  if (password === 'hedgepayments') {
+  if (password === ADMIN_PASSWORD) {
     localStorage.setItem('adminSessionExpires', expiresAt.toString());
     localStorage.setItem('adminLevel', AdminLevel.SUPER);
     return AdminLevel.SUPER;
-  } else if (password === 'bankroll') {
-    localStorage.setItem('adminSessionExpires', expiresAt.toString());
-    localStorage.setItem('adminLevel', AdminLevel.REGULAR);
-    return AdminLevel.REGULAR;
   }
   
   throw new Error('Invalid password');

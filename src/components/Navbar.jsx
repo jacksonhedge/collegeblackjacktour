@@ -1,7 +1,21 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const Navbar = () => {
+  const [showEventsDropdown, setShowEventsDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowEventsDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <nav className="bg-black fixed w-full z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,9 +38,6 @@ const Navbar = () => {
                 Home
               </Link>
 
-              <Link to="/colleges" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
-                Colleges
-              </Link>
 
               {/* Shop - Non-clickable */}
               <div className="relative">
@@ -41,6 +52,45 @@ const Navbar = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
+              </div>
+
+              {/* Events Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowEventsDropdown(!showEventsDropdown)}
+                  className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
+                >
+                  Events
+                  <svg 
+                    className={`ml-1 w-4 h-4 transition-transform ${showEventsDropdown ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {showEventsDropdown && (
+                  <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-black ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <Link
+                        to="/events/scheduled"
+                        className="block px-4 py-2 text-sm text-white hover:bg-gray-800"
+                        onClick={() => setShowEventsDropdown(false)}
+                      >
+                        Scheduled
+                      </Link>
+                      <Link
+                        to="/events/completed"
+                        className="block px-4 py-2 text-sm text-white hover:bg-gray-800"
+                        onClick={() => setShowEventsDropdown(false)}
+                      >
+                        Completed
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Link to="/tournaments" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
