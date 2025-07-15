@@ -21,5 +21,9 @@ spec:
     - path: /
   build:
     type: buildpack
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && npm run build
     runCommand: npm run start
+  healthChecks:
+    - path: /
+      port: 8000
+      protocol: http
