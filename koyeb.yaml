@@ -14,11 +14,15 @@ spec:
   env:
     - key: NODE_ENV
       value: production
+    - key: PORT
+      value: "8000"
   ports:
     - port: 8000
       protocol: http
   routes:
     - path: /
+  git:
+    branch: main
   build:
     type: buildpack
     buildCommand: npm ci && npm run build
@@ -27,3 +31,6 @@ spec:
     - path: /
       port: 8000
       protocol: http
+      interval: 30
+      timeout: 5
+      gracePeriod: 60
