@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "serve dist -l ${PORT:-8000} -s",
+    "start": "node -e \"console.log('Starting production server...')\" && serve dist -l ${PORT:-8000} -s",
     "start:prod": "npm run build && serve dist -l ${PORT:-8000} -s",
     "lint": "eslint .",
     "preview": "vite preview",

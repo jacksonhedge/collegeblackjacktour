@@ -26,7 +26,7 @@ spec:
   build:
     type: buildpack
     buildCommand: npm ci && npm run build
-    runCommand: npm start
+    runCommand: node -e "console.log('Starting production server...')" && serve dist -l ${PORT:-8000} -s
   healthChecks:
     - path: /
       port: 8000
