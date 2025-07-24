@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import AdminLoginPage from './pages/AdminLoginPage';
 import CollegeList from './components/CollegeList';
 import EventsPage from './pages/EventsPage';
+import TournamentsPage from './pages/TournamentsPage';
 import ShopPage from './pages/ShopPage';
 import InfoPage from './pages/InfoPage';
 import SubmitContentPage from './pages/SubmitContentPage';
@@ -64,7 +65,7 @@ function App() {
                     <Route path="/shop" element={<ShopPage />} />
                     <Route path="/info" element={<InfoPage />} />
                     <Route path="/submit-content" element={<SubmitContentPage />} />
-                    <Route path="/tournaments" element={<EventsPage />} />
+                    <Route path="/tournaments" element={<TournamentsPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </div>

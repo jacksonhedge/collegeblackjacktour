@@ -14,10 +14,10 @@ const TournamentCard = ({
   chapter 
 }) => {
   return (
-    <div className="relative overflow-hidden rounded-lg shadow-lg group">
+    <div className="relative overflow-hidden rounded-lg shadow-lg group bg-white border-2 border-red-600">
       {/* Background Image with Overlay */}
-      <div className="relative h-64 w-full">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/40 z-10" />
+      <div className="relative h-48 w-full">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-black/50 z-10" />
         {/* Image with loading state */}
         {imageUrl ? (
           <img 
@@ -46,8 +46,10 @@ const TournamentCard = ({
           
           <div className="space-y-3">
             {/* Status Badge */}
-            <div className="inline-block px-2 py-1 bg-white/20 rounded text-sm text-white">
-              {status}
+            <div className={`inline-block px-3 py-1 rounded text-sm font-semibold ${
+              status === 'completed' ? 'bg-black text-white' : 'bg-red-600 text-white'
+            }`}>
+              {status === 'completed' ? 'Completed' : 'Upcoming'}
             </div>
 
             {/* Date & Time */}
@@ -55,7 +57,14 @@ const TournamentCard = ({
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>{date} @ {time}</span>
+              <span>
+                {date && new Date(date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+                {time && ` @ ${time}`}
+              </span>
             </div>
             
             {/* Location & Chapter */}
