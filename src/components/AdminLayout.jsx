@@ -6,6 +6,7 @@ import AdminCalendarPage from '../pages/AdminCalendarPage';
 import AdminPartnersPage from '../pages/AdminPartnersPage';
 import AdminTournamentsPage from '../pages/AdminTournamentsPage';
 import AdminTeamPage from '../pages/AdminTeamPage';
+import AdminEnterEventPage from '../pages/AdminEnterEventPage';
 import { AdminLevel, signOut } from '../firebase/auth';
 
 const AdminLayout = ({ adminLevel }) => {
@@ -110,7 +111,7 @@ const AdminLayout = ({ adminLevel }) => {
         <div className="p-8">
           <Routes>
             {/* New menu routes */}
-            <Route path="enter-event" element={<AdminTournamentsPage onLogout={handleLogout} adminLevel={adminLevel} />} />
+            <Route path="enter-event" element={<AdminEnterEventPage />} />
             <Route path="schedule" element={<AdminCalendarPage onLogout={handleLogout} />} />
             <Route path="team" element={<AdminTeamPage />} />
             
