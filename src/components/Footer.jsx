@@ -82,6 +82,11 @@ const Footer = () => {
                   Refund Policy
                 </Link>
               </li>
+              <li>
+                <Link to="/admin" className="hover:text-gray-300 text-sm">
+                  Admin
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
