@@ -18,7 +18,7 @@ export const getAdminLevel = () => {
 export const signInAsAdmin = async (password) => {
   const expiresAt = new Date().getTime() + (30 * 60 * 1000); // 30 minutes
 
-  if (password === 'hedgepayments') {
+  if (password === 'MayaK2025@') {
     localStorage.setItem('adminSessionExpires', expiresAt.toString());
     localStorage.setItem('adminLevel', AdminLevel.SUPER);
     return AdminLevel.SUPER;

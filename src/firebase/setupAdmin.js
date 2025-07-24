@@ -16,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const ADMIN_EMAIL = 'admin@collegeblackjacktour.com';
-const ADMIN_PASSWORD = 'hedgepayments';
+const ADMIN_PASSWORD = 'MayaK2025@';
 
 const setupAdmin = async () => {
   try {
