@@ -8,6 +8,8 @@ const AdminEnterEventPage = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dateTBD, setDateTBD] = useState(false);
+  const [collegeSearch, setCollegeSearch] = useState('');
+  const [showCollegeDropdown, setShowCollegeDropdown] = useState(false);
   
   const [formData, setFormData] = useState({
     college: '',
@@ -21,6 +23,16 @@ const AdminEnterEventPage = () => {
     fetchColleges();
     fetchEvents();
   }, []);
+
+  // Initialize college search when colleges are loaded
+  useEffect(() => {
+    if (formData.college && colleges.length > 0) {
+      const selectedCollege = colleges.find(c => c.id === formData.college);
+      if (selectedCollege) {
+        setCollegeSearch(selectedCollege.name);
+      }
+    }
+  }, [formData.college, colleges]);
 
   const fetchColleges = async () => {
     try {
@@ -76,6 +88,28 @@ const AdminEnterEventPage = () => {
     }
   };
 
+  const handleCollegeSelect = (college) => {
+    setFormData({ ...formData, college: college.id, fraternity: '' });
+    setCollegeSearch(college.name);
+    setShowCollegeDropdown(false);
+    fetchFraternities(college.id);
+  };
+
+  const filteredColleges = colleges.filter(college =>
+    college.name.toLowerCase().includes(collegeSearch.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.college-search-container')) {
+        setShowCollegeDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -108,6 +142,7 @@ const AdminEnterEventPage = () => {
       });
       setDateTBD(false);
       setFraternities([]);
+      setCollegeSearch('');
       
       // Refresh events list
       fetchEvents();
@@ -131,24 +166,63 @@ const AdminEnterEventPage = () => {
       {/* Event Form */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* College Dropdown */}
-          <div>
+          {/* College Searchable Dropdown */}
+          <div className="college-search-container relative">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               College *
             </label>
-            <select
-              value={formData.college}
-              onChange={handleCollegeChange}
+            <input
+              type="text"
+              value={collegeSearch}
+              onChange={(e) => {
+                setCollegeSearch(e.target.value);
+                setShowCollegeDropdown(true);
+                if (!e.target.value) {
+                  setFormData({ ...formData, college: '', fraternity: '' });
+                  setFraternities([]);
+                }
+              }}
+              onFocus={() => setShowCollegeDropdown(true)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              required
-            >
-              <option value="">Select a college</option>
-              {colleges.map((college) => (
-                <option key={college.id} value={college.id}>
-                  {college.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Search for a college..."
+              required={!formData.college}
+            />
+            
+            {/* Dropdown list */}
+            {showCollegeDropdown && collegeSearch && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                {filteredColleges.length > 0 ? (
+                  filteredColleges.map((college) => (
+                    <div
+                      key={college.id}
+                      onClick={() => handleCollegeSelect(college)}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {college.name}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-gray-500">
+                    No colleges found
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Show all colleges when input is empty and focused */}
+            {showCollegeDropdown && !collegeSearch && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                {colleges.map((college) => (
+                  <div
+                    key={college.id}
+                    onClick={() => handleCollegeSelect(college)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {college.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Fraternity Dropdown */}
