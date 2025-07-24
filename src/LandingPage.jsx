@@ -1,109 +1,141 @@
-import React from 'react';
-
-// Partners data
-const partners = [
-  {
-    name: 'MyPrize Casino',
-    logo: '/partners/myprize.jpg'
-  },
-  {
-    name: 'Sleeper Fantasy',
-    logo: '/partners/sleeper.png'
-  },
-  {
-    name: 'Bankroll',
-    logo: '/partners/bankroll.png'
-  }
-];
+import React, { useState, useEffect } from 'react';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from './firebase/config';
 
 const LandingPage = () => {
+  const [latestEvent, setLatestEvent] = useState(null);
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    const fetchLatestEvent = async () => {
+      try {
+        const eventsRef = collection(db, 'tournaments');
+        const q = query(eventsRef, orderBy('date', 'desc'), limit(1));
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          const eventData = snapshot.docs[0].data();
+          setLatestEvent({ id: snapshot.docs[0].id, ...eventData });
+        }
+      } catch (error) {
+        console.error('Error fetching latest event:', error);
+      }
+    };
+
+    fetchLatestEvent();
+  }, []);
+
+  const handleJoinTeam = (e) => {
+    e.preventDefault();
+    if (email) {
+      window.location.href = `mailto:jackson@hedgepayments.com?subject=Join the Team&body=Email: ${email}`;
+    }
+  };
+
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-700 via-gray-900 to-black animate-gradient-xy pt-16">
-      {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] py-20 px-4">
-        <div className="max-w-4xl w-full flex flex-col items-center space-y-12">
-          <img 
-            src="/CCT_Logo_1.png" 
-            alt="CCT Logo" 
-            className="w-72 md:w-[450px] animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)]"
-          />
-          <h1 className="text-4xl md:text-6xl font-black text-white tracking-widest animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)] text-center">
-            COMING SOON
-          </h1>
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-600 via-violet-600 to-fuchsia-500 pt-16">
+      {/* Event Info Section */}
+      <div className="w-full bg-black/20 backdrop-blur-sm py-12 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-6">Next Event</h2>
+          {latestEvent ? (
+            <div className="bg-white/10 rounded-lg p-6">
+              <h3 className="text-2xl font-bold text-white mb-2">{latestEvent.title}</h3>
+              <p className="text-lg text-white/90 mb-2">{latestEvent.location}</p>
+              <p className="text-white/80">
+                {latestEvent.date && new Date(latestEvent.date).toLocaleDateString()}
+                {latestEvent.time && ` at ${latestEvent.time}`}
+              </p>
+            </div>
+          ) : (
+            <p className="text-white/80">No upcoming events scheduled</p>
+          )}
         </div>
       </div>
 
-      {/* Partners Section */}
-      <div className="w-full bg-black/40 backdrop-blur-lg py-16">
-        <h2 className="text-3xl font-bold text-white text-center mb-12">Our Partners</h2>
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {partners.map((partner) => (
-              <div 
-                key={partner.name}
-                className="bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center p-8 transition-all duration-300 aspect-video"
+      {/* Contact Us Section */}
+      <div className="w-full bg-white/10 backdrop-blur-lg py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Contact Us</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-white mb-4">Email</h3>
+              <a href="mailto:jackson@hedgepayments.com" className="text-white/90 hover:text-white transition-colors">
+                jackson@hedgepayments.com
+              </a>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-white mb-4">Submit Content</h3>
+              <p className="text-white/80">
+                Have content to share? Email us at:
+              </p>
+              <a href="mailto:jackson@hedgepayments.com" className="text-white/90 hover:text-white transition-colors">
+                jackson@hedgepayments.com
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Follow Bankroll Section */}
+      <div className="w-full bg-black/30 backdrop-blur-lg py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-8">Follow Bankroll</h2>
+          <div className="bg-white/10 rounded-lg p-8">
+            <img 
+              src="/partners/bankroll.png" 
+              alt="Bankroll" 
+              className="w-48 mx-auto mb-6"
+            />
+            <p className="text-white/90 mb-6">
+              Stay updated with Bankroll for the latest news, tips, and exclusive content!
+            </p>
+            <div className="flex justify-center space-x-6">
+              <a href="#" className="text-white hover:text-gray-300 transition-colors">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/>
+                </svg>
+              </a>
+              <a href="#" className="text-white hover:text-gray-300 transition-colors">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+                </svg>
+              </a>
+              <a href="#" className="text-white hover:text-gray-300 transition-colors">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Join the Team Section */}
+      <div className="w-full bg-white/10 backdrop-blur-lg py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-white mb-8">Join the Team</h2>
+          <p className="text-white/90 mb-8">
+            Interested in joining the College Blackjack Tour team? We're always looking for passionate individuals!
+          </p>
+          <form onSubmit={handleJoinTeam} className="max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="flex-1 px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors"
               >
-                <img 
-                  src={partner.logo} 
-                  alt={partner.name} 
-                  className={`max-w-full max-h-full object-contain ${partner.name === 'Bankroll' ? 'scale-120' : ''}`}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Info Section */}
-      <div className="w-full bg-black/60 backdrop-blur-lg py-12 px-4 mt-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div>
-            <h3 className="text-white font-bold mb-4">COMPANY</h3>
-            <div className="space-y-2">
-              <div className="text-gray-300 text-sm">About CCL</div>
-              <div className="text-gray-300 text-sm">Contact Us</div>
-              <div className="text-gray-300 text-sm">Terms of Use</div>
-              <div className="text-gray-300 text-sm">Privacy Policy</div>
+                Submit
+              </button>
             </div>
-          </div>
-
-          {/* Tournaments */}
-          <div>
-            <h3 className="text-white font-bold mb-4">TOURNAMENTS</h3>
-            <div className="space-y-2">
-              <div className="text-gray-300 text-sm">Upcoming Events</div>
-              <div className="text-gray-300 text-sm">Past Events</div>
-              <div className="text-gray-300 text-sm">Rules & Guidelines</div>
-              <div className="text-gray-300 text-sm">Prize Information</div>
-            </div>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="text-white font-bold mb-4">RESOURCES</h3>
-            <div className="space-y-2">
-              <div className="text-gray-300 text-sm">How to Play</div>
-              <div className="text-gray-300 text-sm">FAQ</div>
-              <div className="text-gray-300 text-sm">Support</div>
-              <div className="text-gray-300 text-sm">Responsible Gaming</div>
-            </div>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="text-white font-bold mb-4">CONTACT</h3>
-            <div className="space-y-2">
-              <div className="text-gray-300 text-sm">Email: info@ccl.com</div>
-              <div className="text-gray-300 text-sm">Support: 1-800-SUPPORT</div>
-              <div className="text-gray-300 text-sm">Hours: 24/7</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="mt-12 text-center text-gray-400 text-sm">
-          © {new Date().getFullYear()} Collegiate Casino League. All Rights Reserved.
+          </form>
         </div>
       </div>
     </div>

@@ -1,8 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import AdminLoginPage from './pages/AdminLoginPage';
 import CollegeList from './components/CollegeList';
+import EventsPage from './pages/EventsPage';
+import ShopPage from './pages/ShopPage';
+import InfoPage from './pages/InfoPage';
+import SubmitContentPage from './pages/SubmitContentPage';
 import AdminLayout from './components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { isAuthenticated as checkAuthStatus, getAdminLevel } from './firebase/auth';
@@ -50,11 +55,21 @@ function App() {
           element={
             <>
               <Navbar />
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/colleges" element={<CollegeList />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+              <div className="min-h-screen flex flex-col">
+                <div className="flex-grow">
+                  <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/colleges" element={<CollegeList />} />
+                    <Route path="/events" element={<EventsPage />} />
+                    <Route path="/shop" element={<ShopPage />} />
+                    <Route path="/info" element={<InfoPage />} />
+                    <Route path="/submit-content" element={<SubmitContentPage />} />
+                    <Route path="/tournaments" element={<EventsPage />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </div>
+                <Footer />
+              </div>
             </>
           }
         />
