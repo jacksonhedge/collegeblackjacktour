@@ -34,6 +34,23 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-600 via-violet-600 to-fuchsia-500 pt-16">
+      {/* Hero Section with Logo */}
+      <div className="w-full py-20 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <img 
+            src="/CCT_Logo_2.png" 
+            alt="College Casino Tour" 
+            className="w-64 md:w-80 mx-auto mb-8 filter drop-shadow-2xl"
+          />
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            College Casino Tour
+          </h1>
+          <p className="text-xl text-white/90">
+            The Ultimate College Blackjack Experience
+          </p>
+        </div>
+      </div>
+
       {/* Event Info Section */}
       <div className="w-full bg-black/20 backdrop-blur-sm py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
