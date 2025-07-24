@@ -1,7 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { db } from './firebase/config';
 
 const LandingPage = () => {
   const [email, setEmail] = useState('');
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const eventsRef = collection(db, 'publicEvents');
+      const q = query(
+        eventsRef,
+        where('isPublic', '==', true),
+        orderBy('date', 'asc')
+      );
+      const snapshot = await getDocs(q);
+      const now = new Date();
+      const upcomingEvents = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter(event => {
+          const eventDate = new Date(event.date);
+          return eventDate >= now;
+        })
+        .slice(0, 3); // Show only next 3 events
+      setEvents(upcomingEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
 
   const handleJoinTeam = (e) => {
     e.preventDefault();
@@ -39,6 +72,61 @@ const LandingPage = () => {
           </p>
         </div>
       </div>
+
+      {/* Upcoming Events Section */}
+      {events.length > 0 && (
+        <div className="relative w-full bg-gray-900 py-16 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-white mb-8 text-center">Upcoming Events</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {events.map((event) => (
+                <div key={event.id} className="bg-black border-2 border-red-600 rounded-lg p-6 hover:bg-gray-900 transition-colors">
+                  {/* Logos */}
+                  <div className="flex justify-between items-start mb-4">
+                    {event.collegeLogoUrl && (
+                      <img 
+                        src={event.collegeLogoUrl} 
+                        alt={event.collegeName}
+                        className="h-16 w-16 object-contain"
+                      />
+                    )}
+                    {event.fraternityLogoUrl && (
+                      <img 
+                        src={event.fraternityLogoUrl} 
+                        alt={event.fraternityName}
+                        className="h-16 w-16 object-contain"
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Event Details */}
+                  <h3 className="text-xl font-bold text-white mb-2">{event.title}</h3>
+                  {event.description && (
+                    <p className="text-gray-400 text-sm mb-3">{event.description}</p>
+                  )}
+                  
+                  <div className="space-y-2 text-sm">
+                    {(event.collegeName || event.fraternityName) && (
+                      <p className="text-red-500">
+                        {event.collegeName} {event.collegeName && event.fraternityName && '-'} {event.fraternityName}
+                      </p>
+                    )}
+                    <p className="text-gray-300">
+                      <span className="font-semibold">Date:</span> {new Date(event.date).toLocaleDateString()}
+                    </p>
+                    <p className="text-gray-300">
+                      <span className="font-semibold">Time:</span> {event.time}
+                    </p>
+                    <p className="text-gray-300">
+                      <span className="font-semibold">Location:</span> {event.location}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Follow Bankroll Section */}
       <div className="relative w-full bg-white py-16 px-4">
