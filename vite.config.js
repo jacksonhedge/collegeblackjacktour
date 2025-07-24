@@ -36,8 +36,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html')
-      }
+      },
+      external: ['/.git/**']
     }
   },
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.webp'],
   publicDir: path.resolve(__dirname, 'public')
 });
