@@ -1,0 +1,1 @@
+import{aB as a,aC as n,r as e,j as u}from"./main-Bt21LLck.js";function c(...t){return a(n(t))}const i=e.forwardRef(({className:t,children:r,...o},s)=>u.jsx("button",{ref:s,className:c("px-4 py-2 rounded-md font-medium transition-colors duration-200",t||""),...o,children:r}));i.displayName="Button";export{i as B,c};

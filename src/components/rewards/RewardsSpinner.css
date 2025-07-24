@@ -1,0 +1,22 @@
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(var(--spin-degrees));
+  }
+}
+
+.spinner-wheel {
+  --spin-degrees: 1800deg; /* 5 full rotations by default */
+  animation: spin 3s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+.spinner-wheel.spinning {
+  animation: spin 3s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+.spinner-wheel.reset {
+  transition: none;
+  transform: rotate(0deg);
+}

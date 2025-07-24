@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Profile Images - Admin Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background-color: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #a855f7;
+            margin-bottom: 20px;
+        }
+        .warning {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #dc2626;
+        }
+        button:disabled {
+            background-color: #6b7280;
+            cursor: not-allowed;
+        }
+        .safe-button {
+            background-color: #10b981;
+        }
+        .safe-button:hover {
+            background-color: #059669;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #374151;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background-color: #374151;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #a855f7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Clear Profile Images Tool</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> This will remove all custom profile images from user profiles. Users will automatically get assigned default profile images based on their user ID.
+        </div>
+
+        <p>This tool will:</p>
+        <ul>
+            <li>Remove all custom profile images (profileImage and photoURL fields)</li>
+            <li>Users will automatically get default avatars from profile_1 to profile_30</li>
+            <li>The assignment is consistent (same user always gets same default image)</li>
+        </ul>
+
+        <div style="margin: 30px 0;">
+            <button id="clearBtn" onclick="clearProfileImages()">
+                🗑️ Clear All Profile Images
+            </button>
+            <button class="safe-button" onclick="previewChanges()">
+                👁️ Preview Changes Only
+            </button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div>Total Users</div>
+                <div class="stat-value" id="totalUsers">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Images Cleared</div>
+                <div class="stat-value" id="clearedCount">0</div>
+            </div>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, updateDoc, doc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7VNKg6Gqam8qHZiHUpzgleVYbk8Gc9qU",
+            authDomain: "bankroll-ff2e6.firebaseapp.com",
+            projectId: "bankroll-ff2e6",
+            storageBucket: "bankroll-ff2e6.appspot.com",
+            messagingSenderId: "1011637552701",
+            appId: "1:1011637552701:web:d00d7c8b0a304c32c0c85f",
+            measurementId: "G-S2YBMVFLS7"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let statusEl = document.getElementById('status');
+        let clearBtn = document.getElementById('clearBtn');
+        let totalUsersEl = document.getElementById('totalUsers');
+        let clearedCountEl = document.getElementById('clearedCount');
+
+        function log(message) {
+            statusEl.textContent += message + '\n';
+            statusEl.scrollTop = statusEl.scrollHeight;
+        }
+
+        window.previewChanges = async function() {
+            clearBtn.disabled = true;
+            statusEl.textContent = '';
+            log('🔍 Previewing changes...\n');
+
+            try {
+                const usersCollection = collection(db, 'users');
+                const usersSnapshot = await getDocs(usersCollection);
+                
+                let hasImageCount = 0;
+                let totalCount = 0;
+                
+                usersSnapshot.forEach((userDoc) => {
+                    totalCount++;
+                    const userData = userDoc.data();
+                    
+                    if (userData.profileImage || userData.photoURL) {
+                        hasImageCount++;
+                        const name = userData.firstName && userData.lastName 
+                            ? `${userData.firstName} ${userData.lastName}`
+                            : userData.displayName || userData.email || userDoc.id;
+                        
+                        log(`Found profile image for: ${name}`);
+                        if (userData.profileImage) log(`  - profileImage: ${userData.profileImage}`);
+                        if (userData.photoURL) log(`  - photoURL: ${userData.photoURL}`);
+                    }
+                });
+                
+                totalUsersEl.textContent = totalCount;
+                
+                log(`\n✅ Preview complete!`);
+                log(`Total users: ${totalCount}`);
+                log(`Users with custom images: ${hasImageCount}`);
+                log(`\nNo changes were made. Click "Clear All Profile Images" to proceed.`);
+                
+            } catch (error) {
+                log(`\n❌ Error: ${error.message}`);
+            }
+            
+            clearBtn.disabled = false;
+        };
+
+        window.clearProfileImages = async function() {
+            if (!confirm('Are you sure you want to clear all profile images? This cannot be undone.')) {
+                return;
+            }
+
+            clearBtn.disabled = true;
+            statusEl.textContent = '';
+            log('🚀 Starting to clear profile images...\n');
+
+            try {
+                const usersCollection = collection(db, 'users');
+                const usersSnapshot = await getDocs(usersCollection);
+                
+                let updatedCount = 0;
+                let totalCount = 0;
+                
+                totalUsersEl.textContent = usersSnapshot.size;
+                
+                for (const userDoc of usersSnapshot.docs) {
+                    totalCount++;
+                    const userData = userDoc.data();
+                    
+                    if (userData.profileImage || userData.photoURL) {
+                        const name = userData.firstName && userData.lastName 
+                            ? `${userData.firstName} ${userData.lastName}`
+                            : userData.displayName || userData.email || userDoc.id;
+                        
+                        log(`Clearing image for: ${name}`);
+                        
+                        await updateDoc(doc(db, 'users', userDoc.id), {
+                            profileImage: null,
+                            photoURL: null
+                        });
+                        
+                        updatedCount++;
+                        clearedCountEl.textContent = updatedCount;
+                    }
+                }
+                
+                log(`\n✅ Completed!`);
+                log(`Total users processed: ${totalCount}`);
+                log(`Profile images cleared: ${updatedCount}`);
+                log(`\nUsers will now see default profile images.`);
+                
+            } catch (error) {
+                log(`\n❌ Error: ${error.message}`);
+            }
+            
+            clearBtn.disabled = false;
+        };
+
+        // Auto-run preview on load
+        window.addEventListener('load', () => {
+            log('Welcome to the Profile Image Cleaner!\n');
+            log('Click "Preview Changes Only" to see what will be affected.');
+            log('Click "Clear All Profile Images" to proceed with removal.\n');
+        });
+    </script>
+</body>
+</html>

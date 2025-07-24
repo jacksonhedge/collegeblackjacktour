@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Email Invitations</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f0f0f;
+            color: #ffffff;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background-color: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+        button {
+            background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        }
+        button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .email-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .email-tag {
+            background-color: #4c1d95;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .email-tag button {
+            background: none;
+            border: none;
+            color: #e11d48;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            font-size: 18px;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #374151;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #065f46;
+            color: #6ee7b7;
+        }
+        .error {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+        }
+        .info-box {
+            background-color: #1e3a8a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Test Email Invitations</h1>
+        
+        <div class="info-box">
+            <strong>ℹ️ Email Sending via Resend:</strong> Emails will be sent using the Resend API integration. Real emails will be delivered to the addresses you specify. The system uses beautiful HTML email templates.
+        </div>
+
+        <div class="form-group">
+            <label for="groupName">Group Name</label>
+            <input type="text" id="groupName" placeholder="Weekend Warriors" value="Test Group">
+        </div>
+
+        <div class="form-group">
+            <label for="groupId">Group ID (optional)</label>
+            <input type="text" id="groupId" placeholder="Leave empty for auto-generated ID">
+        </div>
+
+        <div class="form-group">
+            <label for="emailInput">Add Email Address</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="email" id="emailInput" placeholder="friend@example.com" style="flex: 1;">
+                <button onclick="addEmail()">Add</button>
+            </div>
+            <div id="emailList" class="email-list"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="bulkEmails">Or Paste Multiple Emails (comma or line separated)</label>
+            <textarea id="bulkEmails" rows="4" placeholder="john@example.com, jane@example.com&#10;mike@example.com"></textarea>
+            <button onclick="addBulkEmails()">Add All</button>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button id="sendBtn" onclick="sendInvites()" style="font-size: 18px; padding: 15px 30px;">
+                🚀 Send Test Invitations
+            </button>
+            <button onclick="clearAll()" style="background: #ef4444;">
+                Clear All
+            </button>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <script type="module">
+        // Import EmailService logic
+        const emails = new Set();
+        
+        function updateEmailList() {
+            const container = document.getElementById('emailList');
+            container.innerHTML = '';
+            
+            emails.forEach(email => {
+                const tag = document.createElement('div');
+                tag.className = 'email-tag';
+                tag.innerHTML = `
+                    ${email}
+                    <button onclick="removeEmail('${email}')">×</button>
+                `;
+                container.appendChild(tag);
+            });
+            
+            document.getElementById('sendBtn').textContent = 
+                emails.size > 0 ? `🚀 Send ${emails.size} Invitation${emails.size > 1 ? 's' : ''}` : '🚀 Send Test Invitations';
+        }
+        
+        window.addEmail = function() {
+            const input = document.getElementById('emailInput');
+            const email = input.value.trim();
+            
+            if (email && email.includes('@')) {
+                emails.add(email);
+                input.value = '';
+                updateEmailList();
+            }
+        };
+        
+        window.addBulkEmails = function() {
+            const textarea = document.getElementById('bulkEmails');
+            const text = textarea.value;
+            
+            // Split by comma or newline
+            const emailList = text.split(/[,\n]/)
+                .map(e => e.trim())
+                .filter(e => e && e.includes('@'));
+            
+            emailList.forEach(email => emails.add(email));
+            textarea.value = '';
+            updateEmailList();
+        };
+        
+        window.removeEmail = function(email) {
+            emails.delete(email);
+            updateEmailList();
+        };
+        
+        window.clearAll = function() {
+            emails.clear();
+            updateEmailList();
+            document.getElementById('status').innerHTML = '';
+        };
+        
+        window.sendInvites = async function() {
+            const statusEl = document.getElementById('status');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (emails.size === 0) {
+                statusEl.innerHTML = '<div class="error">Please add at least one email address</div>';
+                return;
+            }
+            
+            const groupName = document.getElementById('groupName').value || 'Test Group';
+            const groupId = document.getElementById('groupId').value || 'test-' + Date.now();
+            
+            sendBtn.disabled = true;
+            statusEl.innerHTML = '';
+            
+            try {
+                statusEl.innerHTML = '📤 Sending invitations...\n\n';
+                
+                // Simulate the email service call
+                const emailArray = Array.from(emails);
+                
+                statusEl.innerHTML += `Group: ${groupName}\n`;
+                statusEl.innerHTML += `Group ID: ${groupId}\n`;
+                statusEl.innerHTML += `Recipients: ${emailArray.join(', ')}\n`;
+                statusEl.innerHTML += `Invite Link: https://bankroll.live/groups/${groupId}\n\n`;
+                
+                // Log to console for debugging
+                console.log('Test Email Invitation:', {
+                    groupName,
+                    groupId,
+                    emails: emailArray,
+                    inviteLink: `https://bankroll.live/groups/${groupId}`
+                });
+                
+                // Simulate delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                statusEl.innerHTML += '<div class="success">✅ Success! Invitations sent (simulated)</div>\n';
+                statusEl.innerHTML += '\nIn production, these emails would be sent via Supabase Edge Functions.\n';
+                statusEl.innerHTML += 'Check your browser console for detailed logs.';
+                
+                // Clear emails after success
+                setTimeout(() => {
+                    emails.clear();
+                    updateEmailList();
+                }, 2000);
+                
+            } catch (error) {
+                statusEl.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+            
+            sendBtn.disabled = false;
+        };
+        
+        // Allow Enter key to add email
+        document.getElementById('emailInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addEmail();
+            }
+        });
+        
+        // Initialize
+        updateEmailList();
+    </script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+/* Commissioners Card Container */
+.commissioners-card-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  user-select: none;
+}
+
+/* Selectors */
+.suit-selector,
+.platform-selector {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.suit-btn,
+.platform-btn {
+  padding: 8px 16px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #666;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.suit-btn {
+  font-size: 20px;
+  width: 50px;
+  height: 40px;
+}
+
+.platform-btn {
+  font-size: 14px;
+}
+
+.suit-btn:hover,
+.platform-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.suit-btn.active,
+.platform-btn.active {
+  background: #8B5CF6;
+  color: white;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+/* Card Container */
+.commissioners-card {
+  width: 370px;
+  height: 234px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  perspective: 1000px;
+}
+
+.commissioners-card:hover {
+  transform: rotateY(5deg) rotateX(-5deg);
+}
+
+.commissioners-card.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Card Faces */
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 100px rgba(0, 0, 0, 0.3);
+}
+
+.card-front {
+  z-index: 2;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* Card Styles by Suit */
+.commissioners-card.spade .card-face {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+  color: #ffffff;
+}
+
+.commissioners-card.heart .card-face,
+.commissioners-card.diamond .card-face {
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 50%, #8B0000 100%);
+  color: #ffffff;
+}
+
+.commissioners-card.club .card-face {
+  background: linear-gradient(135deg, #2c2c2c 0%, #4a4a4a 25%, #6a6a6a 50%, #4a4a4a 75%, #2c2c2c 100%);
+  color: #ffffff;
+}
+
+/* Shimmer Effect */
+.card-shimmer {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 60%
+  );
+  animation: shimmer 3s infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%);
+  }
+}
+
+/* Card Content */
+.card-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Front Side Styles */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-brand .brand-name {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card-brand .card-type {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 2px 0 0 0;
+  opacity: 0.9;
+  letter-spacing: 1px;
+}
+
+.platform-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+/* Center Suit Symbol */
+.center-suit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 120px;
+  opacity: 0.15;
+  font-weight: 100;
+}
+
+.commissioners-card.heart .center-suit,
+.commissioners-card.diamond .center-suit {
+  color: #ffffff;
+}
+
+.commissioners-card.spade .center-suit,
+.commissioners-card.club .center-suit {
+  color: #ffffff;
+}
+
+/* Card Number */
+.card-number-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  margin-bottom: 20px;
+}
+
+.card-number {
+  font-size: 22px;
+  letter-spacing: 3px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Eye Toggle */
+.eye-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: inherit;
+}
+
+.eye-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.cardholder-info .cardholder-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin: 0;
+}
+
+.cardholder-info .cardholder-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin: 2px 0 0 0;
+  opacity: 0.8;
+}
+
+.bankroll-logo {
+  width: 50px;
+  height: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+/* Back Side Styles */
+.magnetic-strip {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: #2a2a2a;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.card-details {
+  margin-top: 100px;
+}
+
+.detail-row {
+  margin-bottom: 20px;
+}
+
+.detail-row label,
+.detail-group label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.detail-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.detail-row-split {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.detail-group {
+  flex: 1;
+}
+
+.detail-group .detail-value {
+  font-size: 16px;
+}
+
+.signature-area {
+  margin-top: 20px;
+}
+
+.signature-box {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 20px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.signature {
+  margin: 0;
+  color: #1a1a1a;
+  font-family: 'Brush Script MT', cursive;
+  font-size: 20px;
+}
+
+.back-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 25px;
+  right: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bankroll-logo-small {
+  width: 40px;
+  height: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+.security-text {
+  font-size: 9px;
+  opacity: 0.6;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .commissioners-card {
+    width: 320px;
+    height: 202px;
+  }
+  
+  .card-brand .brand-name {
+    font-size: 18px;
+  }
+  
+  .platform-logo {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .center-suit {
+    font-size: 100px;
+  }
+  
+  .card-number {
+    font-size: 18px;
+  }
+  
+  .cardholder-info .cardholder-name {
+    font-size: 16px;
+  }
+}
+
+/* Material Effects */
+.commissioners-card.spade .card-face::before,
+.commissioners-card.club .card-face::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.03) 10px,
+      rgba(255, 255, 255, 0.03) 20px
+    );
+  pointer-events: none;
+}
+
+.commissioners-card.heart .card-face::before,
+.commissioners-card.diamond .card-face::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at 20% 80%,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+/* Hover Effects */
+.commissioners-card:hover .card-shimmer {
+  animation-duration: 1.5s;
+}
+
+/* Removed hover animation for center suit */

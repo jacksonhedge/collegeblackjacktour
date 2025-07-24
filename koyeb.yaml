@@ -1,0 +1,28 @@
+name: college-casino-tour
+services:
+  - name: college-casino-tour-app
+    type: web
+    build:
+      # Build the React app
+      buildpack: nodejs
+      command: |
+        npm ci
+        npm run build
+    run:
+      # Use the custom Koyeb server
+      command: node koyeb-server.js
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+    ports:
+      - port: 8080
+        protocol: http
+    regions:
+      - was
+    instance:
+      type: free
+    scaling:
+      min: 1
+      max: 1
