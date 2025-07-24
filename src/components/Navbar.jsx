@@ -35,10 +35,6 @@ const Navbar = () => {
               <Link to="/submit-content" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
                 Submit Content
               </Link>
-
-              <Link to="/info" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
-                Info
-              </Link>
             </div>
           </div>
         </div>
