@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5B2C92;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Simplified Bankroll "b" icon that fills the whole space -->
+  <g transform="scale(0.09) translate(20, 20)">
+    <!-- Rectangle part of the "b" -->
+    <rect x="0" y="0" width="80" height="200" rx="10" fill="url(#purpleGradient)"/>
+    
+    <!-- Circle part of the "b" -->
+    <circle cx="140" cy="140" r="120" fill="url(#purpleGradient)"/>
+    
+    <!-- White circle cutout -->
+    <circle cx="140" cy="140" r="40" fill="white"/>
+  </g>
+</svg>

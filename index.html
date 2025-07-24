@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>Bankroll by Hedge Pay</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Get your sports betting winnings instantly. Bankroll helps you withdraw from DraftKings, FanDuel, and more in seconds. Plus earn interest on your betting balance.">
+    <meta name="keywords" content="sports betting, withdrawals, DraftKings, FanDuel, fantasy sports, betting wallet">
+    
+    <!-- Open Graph Meta Tags (for Facebook, iMessage, etc.) -->
+    <meta property="og:title" content="Bankroll by Hedge Pay">
+    <meta property="og:description" content="Your personal Bankroll">
+    <meta property="og:image" content="https://bankroll.live/images/bankroll-og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Bankroll - Your personal Bankroll">
+    <meta property="og:url" content="https://bankroll.live">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bankroll">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Bankroll by Hedge Pay">
+    <meta name="twitter:description" content="Your personal Bankroll">
+    <meta name="twitter:image" content="https://bankroll.live/images/bankroll-icon.png">
+    <meta name="twitter:image:alt" content="Bankroll">
+    <meta name="twitter:url" content="https://bankroll.live">
+    <meta name="twitter:site" content="@bankroll">
+    <meta name="twitter:creator" content="@bankroll">
+    
+    <!-- Apple/iOS Specific Meta Tags for Rich Previews -->
+    <meta name="apple-mobile-web-app-title" content="Bankroll">
+    <meta name="application-name" content="Bankroll">
+    <meta name="msapplication-TileColor" content="#7c3aed">
+    <meta name="theme-color" content="#7c3aed">
+    
+    <!-- Apple Touch Icons for various sizes -->
+    <link rel="apple-touch-icon" sizes="57x57" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/BankrollLogoNew.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/BankrollLogoNew.png">
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/BankrollLogoNew.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/BankrollLogoNew.png">
+    <script src="/suppress-extensions.js"></script>
+    <script>
+      // Error handling for better debugging
+      window.addEventListener('error', function(e) {
+        if (e.filename && (e.filename.includes('chrome-extension://') || 
+            e.filename.includes('webcomponents') || 
+            e.filename.includes('overlay_bundle'))) {
+          // Ignore browser extension errors
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return;
+        }
+        // Ignore custom element already defined errors
+        if (e.message && (e.message.includes('custom element with name') || 
+            e.message.includes('already been defined') ||
+            e.message.includes('mce-autosize-textarea'))) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return;
+        }
+      }, true);
+      
+      // Prevent custom element redefinition errors
+      const originalDefine = customElements.define;
+      customElements.define = function(name, constructor, options) {
+        if (!customElements.get(name)) {
+          originalDefine.call(customElements, name, constructor, options);
+        }
+      };
+    </script>
+    <style>
+      /* Initial loading screen styles */
+      #initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+      
+      .slot-container {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      
+      .slot-reel {
+        width: 64px;
+        height: 80px;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 8px;
+        border: 2px solid #facc15;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+      }
+      
+      .slot-symbols {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        animation: spin 2s linear infinite;
+      }
+      
+      .slot-symbol {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+      }
+      
+      @keyframes spin {
+        from { transform: translateY(0); }
+        to { transform: translateY(-640px); }
+      }
+      
+      .loading-text {
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 20px;
+        text-shadow: 0 0 20px rgba(251, 146, 60, 0.8);
+      }
+      
+      .bankroll-title {
+        color: white;
+        font-size: 36px;
+        font-weight: bold;
+        margin-top: 30px;
+        text-shadow: 0 0 40px rgba(251, 146, 60, 1);
+      }
+      
+      /* Lava lamp effect */
+      .lava-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: -1;
+      }
+      
+      .lava-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(48px);
+        opacity: 0.7;
+      }
+      
+      .lava-blob-1 {
+        width: 128px;
+        height: 128px;
+        background: #f97316;
+        top: 0;
+        left: 0;
+        animation: lava1 8s ease-in-out infinite;
+      }
+      
+      .lava-blob-2 {
+        width: 96px;
+        height: 96px;
+        background: #ef4444;
+        top: 0;
+        right: 0;
+        animation: lava2 10s ease-in-out infinite;
+      }
+      
+      .lava-blob-3 {
+        width: 112px;
+        height: 112px;
+        background: #eab308;
+        bottom: 0;
+        left: 0;
+        animation: lava3 12s ease-in-out infinite;
+      }
+      
+      @keyframes lava1 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(100px, 100px) scale(1.2); }
+        66% { transform: translate(50px, -50px) scale(0.8); }
+      }
+      
+      @keyframes lava2 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-100px, 100px) scale(0.8); }
+        66% { transform: translate(-50px, -50px) scale(1.2); }
+      }
+      
+      @keyframes lava3 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(100px, -100px) scale(1.2); }
+        66% { transform: translate(-50px, -50px) scale(0.8); }
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/main-CIF9t6XU.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/main-D0prcIsd.css">
+  </head>
+  <body>
+    <!-- Initial loading screen before React loads -->
+    <div id="initial-loader">
+      <div class="lava-bg">
+        <div class="lava-blob lava-blob-1"></div>
+        <div class="lava-blob lava-blob-2"></div>
+        <div class="lava-blob lava-blob-3"></div>
+      </div>
+      
+      <div class="slot-container">
+        <div class="slot-reel">
+          <div class="slot-symbols">
+            <div class="slot-symbol">🍒</div>
+            <div class="slot-symbol">💎</div>
+            <div class="slot-symbol">🔔</div>
+            <div class="slot-symbol">⭐</div>
+            <div class="slot-symbol">7️⃣</div>
+            <div class="slot-symbol">💰</div>
+            <div class="slot-symbol">🎰</div>
+            <div class="slot-symbol">🍀</div>
+          </div>
+        </div>
+        <div class="slot-reel" style="animation-delay: 0.2s">
+          <div class="slot-symbols">
+            <div class="slot-symbol">💎</div>
+            <div class="slot-symbol">🔔</div>
+            <div class="slot-symbol">⭐</div>
+            <div class="slot-symbol">7️⃣</div>
+            <div class="slot-symbol">💰</div>
+            <div class="slot-symbol">🎰</div>
+            <div class="slot-symbol">🍀</div>
+            <div class="slot-symbol">🍒</div>
+          </div>
+        </div>
+        <div class="slot-reel" style="animation-delay: 0.4s">
+          <div class="slot-symbols">
+            <div class="slot-symbol">⭐</div>
+            <div class="slot-symbol">7️⃣</div>
+            <div class="slot-symbol">💰</div>
+            <div class="slot-symbol">🎰</div>
+            <div class="slot-symbol">🍀</div>
+            <div class="slot-symbol">🍒</div>
+            <div class="slot-symbol">💎</div>
+            <div class="slot-symbol">🔔</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="loading-text">Loading Bankroll...</div>
+      <div class="bankroll-title">Bankroll</div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script>
+      // Remove initial loader only when React explicitly tells us to
+      window.removeInitialLoader = function() {
+        const loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.style.transition = 'opacity 0.3s';
+          loader.style.opacity = '0';
+          setTimeout(function() {
+            loader.remove();
+          }, 300);
+        }
+      };
+    </script>
+    
+  </body>
+</html>

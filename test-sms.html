@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bankroll SMS Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #7c3aed;
+      margin-bottom: 30px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      background: #7c3aed;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      background: #6d28d9;
+    }
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+    .success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .test-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .test-buttons button {
+      font-size: 14px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Bankroll SMS Test</h1>
+    
+    <div>
+      <label>Your Phone Number (with country code):</label>
+      <input 
+        type="tel" 
+        id="phoneNumber" 
+        placeholder="+1234567890"
+        value="+1"
+      />
+    </div>
+    
+    <div>
+      <label>Test Message:</label>
+      <input 
+        type="text" 
+        id="message" 
+        placeholder="Test message from Bankroll"
+        value="Bankroll Test: SMS notifications are working! 🎉"
+      />
+    </div>
+    
+    <button onclick="sendTestSMS()" id="sendBtn">
+      📱 Send Test SMS
+    </button>
+    
+    <div class="test-buttons">
+      <button onclick="testMoneyTransfer()">💰 Test Money Transfer</button>
+      <button onclick="testMoneyReceived()">💵 Test Money Received</button>
+      <button onclick="testGroupInvite()">👥 Test Group Invite</button>
+      <button onclick="testMoneyRequest()">💸 Test Money Request</button>
+    </div>
+    
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    // Initialize Supabase
+    const { createClient } = supabase;
+    const supabaseUrl = 'https://ysyocexgcgxlpfqvdlas.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzeW9jZXhnY2d4bHBmcXZkbGFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTY0ODU1MTYsImV4cCI6MjAzMjA2MTUxNn0.cpQH3LIWPPzvRw7pr5Xw_jTPXnZoFawV9BG0jUqVLhw';
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+    
+    function showResult(success, message) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = `result ${success ? 'success' : 'error'}`;
+      resultDiv.innerHTML = `${success ? '✅' : '❌'} ${message}`;
+      resultDiv.style.display = 'block';
+    }
+    
+    async function sendTestSMS() {
+      const phone = document.getElementById('phoneNumber').value;
+      const message = document.getElementById('message').value;
+      const button = document.getElementById('sendBtn');
+      
+      if (!phone || phone === '+1') {
+        showResult(false, 'Please enter your phone number');
+        return;
+      }
+      
+      button.disabled = true;
+      button.textContent = '⏳ Sending...';
+      
+      try {
+        const { data, error } = await supabaseClient.functions.invoke('send-sms', {
+          body: {
+            to: phone,
+            message: message
+          }
+        });
+        
+        if (error) throw error;
+        
+        showResult(true, `SMS sent successfully! Check your phone. Message ID: ${data.messageId}`);
+      } catch (error) {
+        showResult(false, `Failed to send SMS: ${error.message}`);
+      } finally {
+        button.disabled = false;
+        button.textContent = '📱 Send Test SMS';
+      }
+    }
+    
+    async function testMoneyTransfer() {
+      const phone = document.getElementById('phoneNumber').value;
+      if (!phone || phone === '+1') {
+        showResult(false, 'Please enter your phone number first');
+        return;
+      }
+      
+      const message = 'Bankroll: You sent $50 to John Smith. Note: "Thanks for lunch!"';
+      document.getElementById('message').value = message;
+      await sendTestSMS();
+    }
+    
+    async function testMoneyReceived() {
+      const phone = document.getElementById('phoneNumber').value;
+      if (!phone || phone === '+1') {
+        showResult(false, 'Please enter your phone number first');
+        return;
+      }
+      
+      const message = 'Bankroll: Jane Doe sent you $100! "Happy birthday! 🎉"';
+      document.getElementById('message').value = message;
+      await sendTestSMS();
+    }
+    
+    async function testGroupInvite() {
+      const phone = document.getElementById('phoneNumber').value;
+      if (!phone || phone === '+1') {
+        showResult(false, 'Please enter your phone number first');
+        return;
+      }
+      
+      const message = 'Bankroll: Mike invited you to join "Weekend Warriors". Join now: bankroll.live/invite?code=ABC123';
+      document.getElementById('message').value = message;
+      await sendTestSMS();
+    }
+    
+    async function testMoneyRequest() {
+      const phone = document.getElementById('phoneNumber').value;
+      if (!phone || phone === '+1') {
+        showResult(false, 'Please enter your phone number first');
+        return;
+      }
+      
+      const message = 'Bankroll: Sarah requested $25 from you. "Pizza money 🍕" Open app to respond.';
+      document.getElementById('message').value = message;
+      await sendTestSMS();
+    }
+  </script>
+</body>
+</html>
