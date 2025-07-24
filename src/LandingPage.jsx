@@ -13,12 +13,7 @@ const LandingPage = () => {
   const fetchEvents = async () => {
     try {
       const eventsRef = collection(db, 'publicEvents');
-      const q = query(
-        eventsRef,
-        where('isPublic', '==', true),
-        orderBy('date', 'asc')
-      );
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(eventsRef);
       const now = new Date();
       const upcomingEvents = snapshot.docs
         .map(doc => ({
@@ -26,9 +21,13 @@ const LandingPage = () => {
           ...doc.data()
         }))
         .filter(event => {
+          // Only show public events
+          if (!event.isPublic) return false;
+          // Only show future events
           const eventDate = new Date(event.date);
           return eventDate >= now;
         })
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
         .slice(0, 3); // Show only next 3 events
       setEvents(upcomingEvents);
     } catch (error) {
