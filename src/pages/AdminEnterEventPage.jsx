@@ -163,7 +163,9 @@ const AdminEnterEventPage = () => {
         googleFormLink: formData.googleFormLink,
         dateScheduled: dateTBD ? 'TBD' : formData.dateScheduled,
         status: 'scheduled',
-        createdAt: new Date()
+        isPublic: false,  // Default to not visible
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
       await addDoc(collection(db, 'events'), eventData);
