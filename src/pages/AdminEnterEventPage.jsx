@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const AdminEnterEventPage = () => {
@@ -151,6 +151,49 @@ const AdminEnterEventPage = () => {
     } catch (error) {
       console.error('Error creating event:', error);
       alert('Error creating event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Temporary cleanup function to remove fake tournaments
+  const cleanupFakeTournaments = async () => {
+    if (!window.confirm('This will remove all fake sample tournaments. Continue?')) {
+      return;
+    }
+
+    const fakeTournamentTitles = [
+      "Texas Hold'em Championship",
+      "Blackjack Tournament", 
+      "Poker Night",
+      "Spring Poker Championship",
+      "March Madness Casino Night",
+      "Spring Break Poker Series",
+      "April Poker Classic",
+      "Spring Finals Casino Night"
+    ];
+
+    try {
+      setLoading(true);
+      const tournamentsRef = collection(db, 'tournaments');
+      const snapshot = await getDocs(tournamentsRef);
+      
+      let deletedCount = 0;
+      
+      for (const docSnapshot of snapshot.docs) {
+        const data = docSnapshot.data();
+        
+        // Check if this is one of the fake tournaments
+        if (fakeTournamentTitles.includes(data.title)) {
+          await deleteDoc(doc(db, 'tournaments', docSnapshot.id));
+          deletedCount++;
+        }
+      }
+      
+      alert(`Successfully deleted ${deletedCount} fake tournaments!`);
+    } catch (error) {
+      console.error('Error cleaning tournaments:', error);
+      alert('Error cleaning tournaments. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -363,6 +406,18 @@ const AdminEnterEventPage = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Temporary Cleanup Button */}
+      <div className="mt-8 text-center">
+        <button
+          onClick={cleanupFakeTournaments}
+          disabled={loading}
+          className="px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:bg-gray-400"
+        >
+          {loading ? 'Cleaning...' : 'Clean Fake Tournaments (One-time cleanup)'}
+        </button>
+        <p className="text-sm text-gray-500 mt-2">This button will be removed after cleaning fake tournaments</p>
       </div>
     </div>
   );
