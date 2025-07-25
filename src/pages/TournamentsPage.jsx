@@ -12,8 +12,8 @@ const TournamentsPage = () => {
   useEffect(() => {
     const fetchTournaments = async () => {
       try {
-        const tournamentsRef = collection(db, 'tournaments');
-        const q = query(tournamentsRef, orderBy('date', 'desc'));
+        const eventsRef = collection(db, 'events');
+        const q = query(eventsRef, orderBy('dateScheduled', 'desc'));
         const querySnapshot = await getDocs(q);
         
         const tournamentsData = querySnapshot.docs.map(doc => ({
@@ -36,8 +36,16 @@ const TournamentsPage = () => {
   // Filter tournaments based on selected filter
   const filteredTournaments = tournaments.filter(tournament => {
     if (filter === 'all') return true;
-    if (filter === 'upcoming') return tournament.status === 'upcoming' || tournament.status === 'scheduled';
-    if (filter === 'completed') return tournament.status === 'completed';
+    
+    const eventDate = tournament.dateScheduled === 'TBD' ? null : new Date(tournament.dateScheduled);
+    const now = new Date();
+    
+    if (filter === 'upcoming') {
+      return tournament.dateScheduled === 'TBD' || (eventDate && eventDate >= now);
+    }
+    if (filter === 'completed') {
+      return eventDate && eventDate < now;
+    }
     return true;
   });
 
@@ -108,21 +116,28 @@ const TournamentsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredTournaments.map((tournament) => (
-              <TournamentCard
-                key={tournament.id}
-                title={tournament.title}
-                date={tournament.date}
-                time={tournament.time}
-                location={tournament.location}
-                imageUrl={tournament.imageUrl}
-                status={tournament.status}
-                type={tournament.type}
-                winner={tournament.winner}
-                runnerUp={tournament.runnerUp}
-                chapter={tournament.chapter}
-              />
-            ))}
+            {filteredTournaments.map((tournament) => {
+              const eventDate = tournament.dateScheduled === 'TBD' ? null : new Date(tournament.dateScheduled);
+              const isUpcoming = tournament.dateScheduled === 'TBD' || (eventDate && eventDate >= new Date());
+              
+              return (
+                <TournamentCard
+                  key={tournament.id}
+                  title={`${tournament.collegeName} - ${tournament.fraternityName}`}
+                  date={tournament.dateScheduled}
+                  time={tournament.dateScheduled === 'TBD' ? 'TBD' : ''}
+                  location={tournament.collegeName}
+                  imageUrl={null} // No images for now
+                  status={isUpcoming ? 'upcoming' : 'completed'}
+                  type="Tournament"
+                  winner={null}
+                  runnerUp={null}
+                  chapter={tournament.fraternityName}
+                  pointOfContact={tournament.pointOfContact}
+                  googleFormLink={tournament.googleFormLink}
+                />
+              );
+            })}
           </div>
         )}
       </div>

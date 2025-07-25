@@ -11,32 +11,15 @@ const TournamentCard = ({
   type,
   winner,
   runnerUp,
-  chapter 
+  chapter,
+  pointOfContact,
+  googleFormLink
 }) => {
   return (
     <div className="relative overflow-hidden rounded-lg shadow-lg group bg-white border-2 border-red-600">
-      {/* Background Image with Overlay */}
-      <div className="relative h-48 w-full">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-black/50 z-10" />
-        {/* Image with loading state */}
-        {imageUrl ? (
-          <img 
-            src={imageUrl} 
-            alt={title}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = '/tournament-images/default.jpg'; // Fallback image
-            }}
-          />
-        ) : (
-          <div className="absolute inset-0 w-full h-full bg-gray-800 flex items-center justify-center">
-            <svg className="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        )}
+      {/* Background with Gradient */}
+      <div className="relative h-auto min-h-[300px] w-full">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-red-900 z-0" />
         
         {/* Content */}
         <div className="absolute inset-0 z-20 p-6 flex flex-col justify-between">
@@ -58,12 +41,13 @@ const TournamentCard = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>
-                {date && new Date(date).toLocaleDateString('en-US', { 
-                  month: 'short', 
-                  day: 'numeric', 
-                  year: 'numeric' 
-                })}
-                {time && ` @ ${time}`}
+                {date === 'TBD' ? 'Date TBD' : 
+                  date && new Date(date).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })
+                }
               </span>
             </div>
             
@@ -76,9 +60,14 @@ const TournamentCard = ({
                 </svg>
                 <span>{location}</span>
               </div>
-              <div className="text-white/80 text-sm pl-7">
-                {chapter}
-              </div>
+              {pointOfContact && (
+                <div className="flex items-center space-x-2 text-white/80 text-sm">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>Contact: {pointOfContact}</span>
+                </div>
+              )}
             </div>
 
             {/* Winners (if tournament is completed) */}
@@ -100,16 +89,27 @@ const TournamentCard = ({
             )}
             
             {/* Action Button */}
-            <button 
-              className={`w-full font-semibold py-2 px-4 rounded-md transition-colors ${
-                status === 'upcoming' 
-                  ? 'bg-white text-black hover:bg-gray-100'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              disabled={status !== 'upcoming'}
-            >
-              {status === 'upcoming' ? 'Enter' : 'View Details'}
-            </button>
+            {googleFormLink && status === 'upcoming' ? (
+              <a 
+                href={googleFormLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center font-semibold py-2 px-4 rounded-md transition-colors bg-white text-black hover:bg-gray-100"
+              >
+                Enter Tournament
+              </a>
+            ) : (
+              <button 
+                className={`w-full font-semibold py-2 px-4 rounded-md transition-colors ${
+                  status === 'upcoming' 
+                    ? 'bg-white/50 text-white cursor-not-allowed'
+                    : 'bg-white/20 text-white hover:bg-white/30'
+                }`}
+                disabled={true}
+              >
+                {status === 'upcoming' ? 'Registration Coming Soon' : 'Tournament Completed'}
+              </button>
+            )}
           </div>
         </div>
       </div>
