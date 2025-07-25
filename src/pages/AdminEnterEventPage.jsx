@@ -19,9 +19,24 @@ const AdminEnterEventPage = () => {
     dateScheduled: ''
   });
 
+  // Default fraternities that should always be available
+  const defaultFraternities = [
+    { id: 'pike', name: 'Pike (Pi Kappa Alpha)' },
+    { id: 'sigma-chi', name: 'Sigma Chi' },
+    { id: 'sae', name: 'SAE (Sigma Alpha Epsilon)' },
+    { id: 'dke', name: 'DKE (Delta Kappa Epsilon)' },
+    { id: 'kappa-sig', name: 'Kappa Sig' },
+    { id: 'tke', name: 'TKE (Tau Kappa Epsilon)' },
+    { id: 'pkt', name: 'PKT' },
+    { id: 'phi-tau', name: 'Phi Tau' },
+    { id: 'delta-chi', name: 'Delta Chi' }
+  ];
+
   useEffect(() => {
     fetchColleges();
     fetchEvents();
+    // Initialize with default fraternities
+    setFraternities(defaultFraternities);
   }, []);
 
   // Initialize college search when colleges are loaded
@@ -52,14 +67,34 @@ const AdminEnterEventPage = () => {
     try {
       const fraternitiesRef = collection(db, 'colleges', collegeId, 'fraternities');
       const snapshot = await getDocs(fraternitiesRef);
-      const fraternitiesData = snapshot.docs.map(doc => ({
+      const dbFraternities = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setFraternities(fraternitiesData.sort((a, b) => a.name.localeCompare(b.name)));
+      
+      // Combine database fraternities with default fraternities
+      // Use a Map to avoid duplicates based on name
+      const fraternityMap = new Map();
+      
+      // Add default fraternities first
+      defaultFraternities.forEach(frat => {
+        fraternityMap.set(frat.name.toLowerCase(), frat);
+      });
+      
+      // Add database fraternities (they will override defaults if same name)
+      dbFraternities.forEach(frat => {
+        fraternityMap.set(frat.name.toLowerCase(), frat);
+      });
+      
+      // Convert back to array and sort
+      const combinedFraternities = Array.from(fraternityMap.values())
+        .sort((a, b) => a.name.localeCompare(b.name));
+      
+      setFraternities(combinedFraternities);
     } catch (error) {
       console.error('Error fetching fraternities:', error);
-      setFraternities([]);
+      // If error, at least show default fraternities
+      setFraternities(defaultFraternities);
     }
   };
 
@@ -84,7 +119,8 @@ const AdminEnterEventPage = () => {
     if (collegeId) {
       fetchFraternities(collegeId);
     } else {
-      setFraternities([]);
+      // Show default fraternities when no college is selected
+      setFraternities(defaultFraternities);
     }
   };
 
@@ -222,7 +258,7 @@ const AdminEnterEventPage = () => {
                 setShowCollegeDropdown(true);
                 if (!e.target.value) {
                   setFormData({ ...formData, college: '', fraternity: '' });
-                  setFraternities([]);
+                  setFraternities(defaultFraternities);
                 }
               }}
               onFocus={() => setShowCollegeDropdown(true)}
