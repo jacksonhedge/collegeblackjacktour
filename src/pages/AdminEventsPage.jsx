@@ -48,33 +48,57 @@ const AdminEventsPage = () => {
   const uploadImage = async (file, path) => {
     if (!file) return null;
     
-    const storageRef = ref(storage, `events/${path}/${Date.now()}_${file.name}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
+    try {
+      const storageRef = ref(storage, `events/${path}/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      // Return null if upload fails - images are optional
+      return null;
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setUploading(true);
+    
+    let imageUploadWarning = false;
 
     try {
       let collegeLogoUrl = formData.collegeLogoUrl;
       let fraternityLogoUrl = formData.fraternityLogoUrl;
 
       // Upload images if new files are selected
-      if (collegeLogoFile) {
-        collegeLogoUrl = await uploadImage(collegeLogoFile, 'college-logos');
-      }
-      if (fraternityLogoFile) {
-        fraternityLogoUrl = await uploadImage(fraternityLogoFile, 'fraternity-logos');
+      if (collegeLogoFile || fraternityLogoFile) {
+        setUploading(true);
+        
+        if (collegeLogoFile) {
+          const uploadedUrl = await uploadImage(collegeLogoFile, 'college-logos');
+          if (uploadedUrl) {
+            collegeLogoUrl = uploadedUrl;
+          } else {
+            imageUploadWarning = true;
+          }
+        }
+        
+        if (fraternityLogoFile) {
+          const uploadedUrl = await uploadImage(fraternityLogoFile, 'fraternity-logos');
+          if (uploadedUrl) {
+            fraternityLogoUrl = uploadedUrl;
+          } else {
+            imageUploadWarning = true;
+          }
+        }
+        
+        setUploading(false);
       }
 
       const eventData = {
         ...formData,
-        collegeLogoUrl,
-        fraternityLogoUrl,
+        collegeLogoUrl: collegeLogoUrl || '',
+        fraternityLogoUrl: fraternityLogoUrl || '',
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -109,7 +133,9 @@ const AdminEventsPage = () => {
       // Refresh events
       fetchEvents();
       
-      alert(editingEvent ? 'Event updated successfully!' : 'Event created successfully!');
+      const successMessage = editingEvent ? 'Event updated successfully!' : 'Event created successfully!';
+      const warningMessage = imageUploadWarning ? ' (Note: Some images could not be uploaded)' : '';
+      alert(successMessage + warningMessage);
     } catch (error) {
       console.error('Error saving event:', error);
       alert('Error saving event. Please try again.');
