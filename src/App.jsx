@@ -5,6 +5,7 @@ import TournamentsPage from './pages/TournamentsPage';
 import EventsPage from './pages/EventsPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminLayout from './components/AdminLayout';
+import BetrPage from './pages/BetrPage';
 import { useState, useEffect } from 'react';
 import { isAuthenticated as checkAuthStatus } from './firebase/auth';
 
@@ -26,6 +27,7 @@ function App() {
   return (
     <div className="min-h-screen">
       <Routes>
+        <Route path="/Betr" element={<BetrPage />} />
         <Route
           path="/admin/*"
           element={
