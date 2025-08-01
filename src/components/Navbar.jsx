@@ -54,13 +54,13 @@ const Navbar = () => {
                 </div>
               </div>
 
-              {/* Events Dropdown */}
+              {/* Tournaments Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowEventsDropdown(!showEventsDropdown)}
                   className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center"
                 >
-                  Events
+                  Tournaments
                   <svg 
                     className={`ml-1 w-4 h-4 transition-transform ${showEventsDropdown ? 'rotate-180' : ''}`}
                     fill="none" 
@@ -92,10 +92,6 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
-
-              <Link to="/tournaments" className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
-                Tournaments
-              </Link>
 
               {/* Info - Non-clickable */}
               <div className="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed">

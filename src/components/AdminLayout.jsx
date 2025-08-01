@@ -8,6 +8,7 @@ import AdminCalendarPage from '../pages/AdminCalendarPage';
 import AdminPartnersPage from '../pages/AdminPartnersPage';
 import BracketManagementPage from '../pages/BracketManagementPage';
 import SalesPipelinePage from '../pages/SalesPipelinePage';
+import AdminMapPage from '../pages/AdminMapPage';
 import { AdminLevel, signOut } from '../firebase/auth';
 
 const AdminLayout = ({ adminLevel }) => {
@@ -111,6 +112,16 @@ const AdminLayout = ({ adminLevel }) => {
     {
       section: 'Tools',
       items: [
+        { 
+          name: 'College Map', 
+          path: '/admin/map',
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+          ),
+          adminOnly: true
+        },
         { 
           name: 'Calendar', 
           path: '/admin/calendar',
@@ -241,6 +252,7 @@ const AdminLayout = ({ adminLevel }) => {
                location.pathname.includes('partners') ? 'Partner Management' :
                location.pathname.includes('calendar') ? 'Calendar' :
                location.pathname.includes('sales') ? 'Sales Pipeline' :
+               location.pathname.includes('map') ? 'College Map' :
                location.pathname.includes('reports') ? 'Reports' :
                'Dashboard'}
             </h1>
@@ -263,6 +275,7 @@ const AdminLayout = ({ adminLevel }) => {
                 <Route path="colleges" element={<AdminCollegesPage />} />
                 <Route path="fraternities" element={<AdminFraternitiesPage />} />
                 <Route path="calendar" element={<AdminCalendarPage onLogout={handleLogout} />} />
+                <Route path="map" element={<AdminMapPage />} />
               </>
             )}
             

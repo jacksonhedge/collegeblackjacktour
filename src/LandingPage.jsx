@@ -7,16 +7,28 @@ import EventRegistrationModal from './components/EventRegistrationModal';
 // Partners data
 const partners = [
   {
-    name: 'MyPrize Casino',
-    logo: '/partners/myprize.jpg'
-  },
-  {
     name: 'Sleeper Fantasy',
     logo: '/partners/sleeper.png'
   },
   {
+    name: 'Pulsz',
+    logo: '/partners/pulsz.png'
+  },
+  {
+    name: 'McLuck',
+    logo: '/partners/mcluck.png'
+  },
+  {
+    name: 'MyPrize',
+    logo: '/partners/myprize.jpg'
+  },
+  {
     name: 'Bankroll',
     logo: '/partners/bankroll.png'
+  },
+  {
+    name: 'Hedge Payments',
+    logo: '/partners/hedge-payments.png'
   }
 ];
 
@@ -121,7 +133,7 @@ const LandingPage = () => {
       <div className="relative w-full bg-black/70 backdrop-blur-lg py-16 mt-12">
         <h2 className="text-3xl font-bold text-white text-center mb-12">Our Partners</h2>
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
             {partners.map((partner) => (
               <div 
                 key={partner.name}
