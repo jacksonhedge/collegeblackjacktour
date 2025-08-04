@@ -1,7 +1,7 @@
 // Complete list of NIC member fraternities with proper formatting
 export const fraternityOptions = [
   { value: '', label: 'Select a fraternity' },
-  { value: 'no-fraternity', label: 'No fraternities yet' },
+  { value: 'no-fraternity', label: 'Not affiliated with Greek life' },
   
   // Alphabetical listing of all fraternities
   { value: 'acacia', label: 'Acacia' },
@@ -62,7 +62,10 @@ export const fraternityOptions = [
   { value: 'theta-xi', label: 'Theta Xi (ΘΞ)' },
   { value: 'triangle', label: 'Triangle' },
   { value: 'zbt', label: 'Zeta Beta Tau (ΖΒΤ)' },
-  { value: 'zeta-psi', label: 'Zeta Psi (ΖΨ)' }
+  { value: 'zeta-psi', label: 'Zeta Psi (ΖΨ)' },
+  
+  // Other option - must be last
+  { value: 'other', label: 'Other (Type Below)' }
 ];
 
 // Common abbreviations/nicknames mapped to full names

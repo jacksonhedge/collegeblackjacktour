@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { submitTournamentRequest } from '../firebase/events';
 import { fraternityOptions } from '../data/fraternityListComplete';
+import { collegeOptions } from '../data/collegeList';
 
 const TournamentRequestModal = ({ onClose }) => {
   const [formData, setFormData] = useState({
@@ -18,12 +19,44 @@ const TournamentRequestModal = ({ onClose }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [customCollege, setCustomCollege] = useState('');
+  const [customFraternity, setCustomFraternity] = useState('');
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    
+    // Handle college selection
+    if (name === 'collegeName') {
+      if (value === 'Other (Type Below)') {
+        setFormData({ ...formData, collegeName: '' });
+      } else {
+        setFormData({ ...formData, collegeName: value });
+        setCustomCollege('');
+      }
+    }
+    // Handle fraternity selection
+    else if (name === 'fraternityName') {
+      if (value === 'Other (Type Below)') {
+        setFormData({ ...formData, fraternityName: '' });
+      } else {
+        setFormData({ ...formData, fraternityName: value });
+        setCustomFraternity('');
+      }
+    }
+    // Handle other fields
+    else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleCustomCollegeChange = (e) => {
+    setCustomCollege(e.target.value);
+    setFormData({ ...formData, collegeName: e.target.value });
+  };
+
+  const handleCustomFraternityChange = (e) => {
+    setCustomFraternity(e.target.value);
+    setFormData({ ...formData, fraternityName: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -31,8 +64,15 @@ const TournamentRequestModal = ({ onClose }) => {
     setSubmitting(true);
     setError('');
 
+    // Prepare final data
+    const finalData = {
+      ...formData,
+      collegeName: formData.collegeName || customCollege,
+      fraternityName: formData.fraternityName || customFraternity
+    };
+
     try {
-      await submitTournamentRequest(formData);
+      await submitTournamentRequest(finalData);
       setSuccess(true);
       setTimeout(() => {
         onClose();
@@ -44,6 +84,10 @@ const TournamentRequestModal = ({ onClose }) => {
       setSubmitting(false);
     }
   };
+
+  // Check if "Other" is selected
+  const isCollegeOther = formData.collegeName === '' && collegeOptions.find(opt => opt.label === 'Other (Type Below)');
+  const isFraternityOther = formData.fraternityName === '' && fraternityOptions.find(opt => opt.label === 'Other (Type Below)');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
@@ -122,22 +166,39 @@ const TournamentRequestModal = ({ onClose }) => {
                   <label className="block text-white text-sm font-medium mb-2">
                     College/University *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="collegeName"
-                    value={formData.collegeName}
+                    value={formData.collegeName === '' && customCollege ? 'Other (Type Below)' : formData.collegeName}
                     onChange={handleChange}
-                    required
+                    required={!customCollege}
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
-                  />
+                  >
+                    {collegeOptions.map(option => (
+                      <option key={option.value} value={option.label}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {/* Show text input if "Other" is selected */}
+                  {(formData.collegeName === '' && customCollege !== undefined) || formData.collegeName === 'Other (Type Below)' ? (
+                    <input
+                      type="text"
+                      value={customCollege}
+                      onChange={handleCustomCollegeChange}
+                      placeholder="Enter college name"
+                      required
+                      className="w-full mt-2 px-3 py-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+                    />
+                  ) : null}
                 </div>
+                
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">
                     Fraternity/Organization
                   </label>
                   <select
                     name="fraternityName"
-                    value={formData.fraternityName}
+                    value={formData.fraternityName === '' && customFraternity ? 'Other (Type Below)' : formData.fraternityName}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
                   >
@@ -147,6 +208,16 @@ const TournamentRequestModal = ({ onClose }) => {
                       </option>
                     ))}
                   </select>
+                  {/* Show text input if "Other" is selected */}
+                  {(formData.fraternityName === '' && customFraternity !== undefined) || formData.fraternityName === 'Other (Type Below)' ? (
+                    <input
+                      type="text"
+                      value={customFraternity}
+                      onChange={handleCustomFraternityChange}
+                      placeholder="Enter fraternity/organization name"
+                      className="w-full mt-2 px-3 py-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+                    />
+                  ) : null}
                 </div>
               </div>
 
