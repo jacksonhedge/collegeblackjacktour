@@ -1,6 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const CollegeMap = ({ colleges, onCollegeClick, loading = false }) => {
+// Color palette for colleges
+const collegeColors = [
+  '#3b82f6', // blue
+  '#10b981', // emerald
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#14b8a6', // teal
+  '#f97316', // orange
+  '#6366f1', // indigo
+  '#84cc16', // lime
+];
+
+const CollegeMap = ({ colleges, onCollegeClick, loading = false, selectedState = null, stateMapData = {} }) => {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -123,65 +137,67 @@ const CollegeMap = ({ colleges, onCollegeClick, loading = false }) => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleMouseUp}
       >
+        {/* SVG Filter Definitions */}
+        <defs>
+          <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+            <feOffset dx="0" dy="2" result="offsetblur"/>
+            <feFlood floodColor="#000000" floodOpacity="0.3"/>
+            <feComposite in2="offsetblur" operator="in"/>
+            <feMerge>
+              <feMergeNode/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        
         <g transform={`translate(${position.x}, ${position.y}) scale(${scale})`}>
-          {/* US Map Background */}
-          <rect
-            className="map-background"
-            x="0"
-            y="0"
-            width="1200"
-            height="600"
-            fill="#e5e7eb"
-            stroke="#9ca3af"
-            strokeWidth="2"
-          />
-          
-          {/* Simplified US Map Outline */}
-          <g className="states">
-            <path
-              d="M 150 250 C 150 200, 200 150, 300 150 L 900 150 C 1000 150, 1050 170, 1100 200 L 1100 250 L 1050 280 L 1100 320 L 1100 400 C 1100 450, 1050 480, 1000 480 L 900 500 L 800 520 L 700 500 L 600 520 L 500 500 L 400 480 L 300 450 C 200 450, 150 400, 150 350 Z"
-              fill="#f3f4f6"
-              stroke="#6b7280"
-              strokeWidth="2"
-              opacity="0.8"
+          {/* Map Background Image - US or State */}
+          {selectedState && stateMapData[selectedState] ? (
+            <image
+              href={stateMapData[selectedState].imageUrl}
+              x={stateMapData[selectedState].bounds.x}
+              y={stateMapData[selectedState].bounds.y}
+              width={stateMapData[selectedState].bounds.width}
+              height={stateMapData[selectedState].bounds.height}
+              opacity="0.3"
+              preserveAspectRatio="xMidYMid meet"
             />
-            {/* Florida */}
-            <path
-              d="M 900 480 L 920 520 L 900 550 L 880 520 Z"
-              fill="#f3f4f6"
-              stroke="#6b7280"
-              strokeWidth="1"
-              opacity="0.8"
-            />
-            {/* Texas */}
-            <path
-              d="M 500 400 L 600 400 L 650 450 L 600 500 L 500 500 L 450 450 Z"
-              fill="#f3f4f6"
-              stroke="#6b7280"
-              strokeWidth="1"
-              opacity="0.8"
-            />
-            {/* California */}
-            <path
-              d="M 100 200 L 150 250 L 150 350 L 100 400 L 80 350 L 80 250 Z"
-              fill="#f3f4f6"
-              stroke="#6b7280"
-              strokeWidth="1"
-              opacity="0.8"
-            />
-          </g>
+          ) : (
+            <>
+              <rect x="0" y="0" width="1200" height="600" fill="white" stroke="black" strokeWidth="3" />
+              <image
+                href="https://simplemaps.com/static/svg/us/us.svg"
+                x="50"
+                y="50"
+                width="1100"
+                height="500"
+                opacity="1"
+                preserveAspectRatio="xMidYMid meet"
+              />
+            </>
+          )}
 
           {/* College Markers */}
-          {colleges.map((college) => (
-            <g key={college.id}>
+          {colleges.map((college, index) => {
+            // Use consistent color based on college name or index
+            const colorIndex = college.name ? 
+              college.name.charCodeAt(0) % collegeColors.length : 
+              index % collegeColors.length;
+            const color = collegeColors[colorIndex];
+            
+            return (
               <circle
+                key={college.id}
                 cx={college.coordinates.x}
                 cy={college.coordinates.y}
-                r="20"
-                fill="white"
-                stroke="#3b82f6"
-                strokeWidth="2"
-                className="cursor-pointer hover:stroke-blue-700 transition-colors"
+                r={hoveredCollege?.id === college.id ? "12" : "8"}
+                fill={color}
+                fillOpacity="1"
+                stroke="black"
+                strokeWidth={hoveredCollege?.id === college.id ? "2.5" : "2"}
+                className="cursor-pointer transition-all"
+                filter={hoveredCollege?.id === college.id ? "url(#dropShadow)" : "none"}
                 onMouseEnter={() => setHoveredCollege(college)}
                 onMouseLeave={() => setHoveredCollege(null)}
                 onClick={(e) => {
@@ -189,32 +205,8 @@ const CollegeMap = ({ colleges, onCollegeClick, loading = false }) => {
                   onCollegeClick?.(college);
                 }}
               />
-              {college.logoUrl ? (
-                <image
-                  x={college.coordinates.x - 15}
-                  y={college.coordinates.y - 15}
-                  width="30"
-                  height="30"
-                  href={college.logoUrl}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                  className="pointer-events-none"
-                />
-              ) : (
-                <text
-                  x={college.coordinates.x}
-                  y={college.coordinates.y + 5}
-                  textAnchor="middle"
-                  fontSize="12"
-                  fill="#3b82f6"
-                  className="pointer-events-none"
-                >
-                  {college.name.substring(0, 3).toUpperCase()}
-                </text>
-              )}
-            </g>
-          ))}
+            );
+          })}
         </g>
       </svg>
 

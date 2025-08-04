@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { submitTournamentRequest } from '../firebase/events';
+import { fraternityOptions } from '../data/fraternityListComplete';
 
 const TournamentRequestModal = ({ onClose }) => {
   const [formData, setFormData] = useState({
@@ -134,13 +135,18 @@ const TournamentRequestModal = ({ onClose }) => {
                   <label className="block text-white text-sm font-medium mb-2">
                     Fraternity/Organization
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="fraternityName"
                     value={formData.fraternityName}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
-                  />
+                  >
+                    {fraternityOptions.map(option => (
+                      <option key={option.value} value={option.label}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
