@@ -5,11 +5,14 @@ import { fraternityList } from '../data/fraternityList';
 
 const AddFraternityForm = ({ collegeName, onSuccess, onClose }) => {
   const [selectedFraternity, setSelectedFraternity] = useState('');
+  const [customFraternity, setCustomFraternity] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedFraternity) return;
+    const fraternityName = showCustomInput ? customFraternity : selectedFraternity;
+    if (!fraternityName) return;
 
     setLoading(true);
     try {
@@ -22,7 +25,7 @@ const AddFraternityForm = ({ collegeName, onSuccess, onClose }) => {
       
       // Add the fraternity
       await addDoc(fraternitiesRef, {
-        name: selectedFraternity,
+        name: fraternityName,
         status: 'outreached',
         createdAt: new Date().toISOString()
       });
@@ -68,19 +71,50 @@ const AddFraternityForm = ({ collegeName, onSuccess, onClose }) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Fraternity
               </label>
-              <select
-                value={selectedFraternity}
-                onChange={(e) => setSelectedFraternity(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                required
-              >
-                <option value="">Select a fraternity...</option>
-                {fraternityList.map((fraternity) => (
-                  <option key={fraternity} value={fraternity}>
-                    {fraternity}
-                  </option>
-                ))}
-              </select>
+              {!showCustomInput ? (
+                <select
+                  value={selectedFraternity}
+                  onChange={(e) => {
+                    if (e.target.value === 'other') {
+                      setShowCustomInput(true);
+                      setSelectedFraternity('');
+                    } else {
+                      setSelectedFraternity(e.target.value);
+                    }
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  required
+                >
+                  <option value="">Select a fraternity...</option>
+                  {fraternityList.map((fraternity) => (
+                    <option key={fraternity} value={fraternity}>
+                      {fraternity}
+                    </option>
+                  ))}
+                  <option value="other">Other (Type Below)</option>
+                </select>
+              ) : (
+                <div className="mt-1 flex rounded-md shadow-sm">
+                  <input
+                    type="text"
+                    value={customFraternity}
+                    onChange={(e) => setCustomFraternity(e.target.value)}
+                    placeholder="Enter fraternity name"
+                    className="flex-1 rounded-none rounded-l-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomInput(false);
+                      setCustomFraternity('');
+                    }}
+                    className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-4">
@@ -94,7 +128,7 @@ const AddFraternityForm = ({ collegeName, onSuccess, onClose }) => {
               <button
                 type="submit"
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-                disabled={loading || !selectedFraternity}
+                disabled={loading || (!selectedFraternity && !customFraternity)}
               >
                 {loading ? 'Adding...' : 'Add Fraternity'}
               </button>

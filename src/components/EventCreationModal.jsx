@@ -249,7 +249,7 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
                         {fraternity.name}
                       </option>
                     ))}
-                    <option value="custom">+ Type custom fraternity</option>
+                    {formData.collegeId && <option value="custom">Other (Type Below)</option>}
                   </select>
                 ) : (
                   <div className="mt-1 flex rounded-md shadow-sm">
