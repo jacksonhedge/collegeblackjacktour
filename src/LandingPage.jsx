@@ -106,8 +106,11 @@ const LandingPage = () => {
             className="w-72 md:w-[450px] animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)]"
           />
           <h1 className="text-4xl md:text-6xl font-black text-white tracking-widest animate-float drop-shadow-[0_0_25px_rgba(255,255,255,0.3)] text-center">
-            COMING SOON
+            COLLEGE CASINO TOUR
           </h1>
+          <p className="text-xl md:text-2xl text-white text-center">
+            Splitting 10s
+          </p>
         </div>
       </div>
 

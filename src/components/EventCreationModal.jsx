@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase/config';
+import { fraternityOptions } from '../data/fraternityListExpanded';
 
 const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
   const [colleges, setColleges] = useState([]);
-  const [fraternities, setFraternities] = useState([]);
-  const [filteredFraternities, setFilteredFraternities] = useState([]);
   const [showFraternityInput, setShowFraternityInput] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [recentLogos, setRecentLogos] = useState([]);
@@ -39,17 +38,9 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
 
   useEffect(() => {
     fetchColleges();
-    fetchFraternities();
+    // No longer need to fetch fraternities from database
     loadRecentLogos();
   }, []);
-
-  useEffect(() => {
-    // Filter fraternities based on selected college
-    if (formData.collegeId) {
-      const filtered = fraternities.filter(frat => frat.collegeId === formData.collegeId);
-      setFilteredFraternities(filtered);
-    }
-  }, [formData.collegeId, fraternities]);
 
   const fetchColleges = async () => {
     try {
@@ -64,18 +55,7 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
     }
   };
 
-  const fetchFraternities = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'fraternities'));
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setFraternities(data);
-    } catch (error) {
-      console.error('Error fetching fraternities:', error);
-    }
-  };
+  // Removed fetchFraternities as we're using static list now
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -110,8 +90,8 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
   };
 
   const handleFraternityChange = (e) => {
-    const fraternityId = e.target.value;
-    if (fraternityId === 'custom') {
+    const fraternityValue = e.target.value;
+    if (fraternityValue === 'custom') {
       setShowFraternityInput(true);
       setFormData(prev => ({
         ...prev,
@@ -119,12 +99,12 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
         fraternityName: ''
       }));
     } else {
-      const fraternity = filteredFraternities.find(f => f.id === fraternityId);
+      const fraternity = fraternityOptions.find(f => f.value === fraternityValue);
       setShowFraternityInput(false);
       setFormData(prev => ({
         ...prev,
-        fraternityId,
-        fraternityName: fraternity?.name || ''
+        fraternityId: fraternityValue,
+        fraternityName: fraternity?.label || ''
       }));
     }
   };
@@ -243,13 +223,12 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
                     onChange={handleFraternityChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   >
-                    <option value="">Select a fraternity</option>
-                    {formData.collegeId && filteredFraternities.map(fraternity => (
-                      <option key={fraternity.id} value={fraternity.id}>
-                        {fraternity.name}
+                    {fraternityOptions.map(fraternity => (
+                      <option key={fraternity.value} value={fraternity.value}>
+                        {fraternity.label}
                       </option>
                     ))}
-                    {formData.collegeId && <option value="custom">Other (Type Below)</option>}
+                    <option value="custom">Other (Type Below)</option>
                   </select>
                 ) : (
                   <div className="mt-1 flex rounded-md shadow-sm">
