@@ -13,6 +13,7 @@ const AdminEventsPage = ({ showCreateModal, setShowCreateModal, defaultTab = 'ev
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [activeTab, setActiveTab] = useState(defaultTab); // 'events' or 'sales'
   const [filter, setFilter] = useState('all'); // all, upcoming, active, completed
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   
   // Use prop modal state if provided, otherwise use local state
   const isModalOpen = showCreateModal !== undefined ? showCreateModal : localShowCreateModal;
@@ -147,30 +148,50 @@ const AdminEventsPage = ({ showCreateModal, setShowCreateModal, defaultTab = 'ev
                 <li key={event.id}>
                   <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
-                            <p className="text-sm text-gray-500">
-                              {event.collegeName} • {event.fraternityName}
-                            </p>
+                      <div className="flex items-start space-x-4">
+                        {/* College Logo */}
+                        {event.collegeLogo && (
+                          <div className="flex-shrink-0">
+                            <img 
+                              src={event.collegeLogo} 
+                              alt={event.collegeName || 'College logo'}
+                              className="h-16 w-16 object-contain bg-gray-100 rounded-lg p-1"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              event.status === 'upcoming' ? 'bg-green-100 text-green-800' :
-                              event.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                              event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {event.status}
-                            </span>
-                            {event.showOnLandingPage && (
-                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                                On Landing Page
+                        )}
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
+                              <p className="text-sm text-gray-500">
+                                {event.collegeName} • {event.fraternityName}
+                                {event.state && (
+                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {event.state}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                event.status === 'upcoming' ? 'bg-green-100 text-green-800' :
+                                event.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                                event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {event.status}
                               </span>
-                            )}
+                              {event.showOnLandingPage && (
+                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                                  On Landing Page
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
                         
                         <div className="mt-2 flex items-center text-sm text-gray-500">
                           <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,6 +226,7 @@ const AdminEventsPage = ({ showCreateModal, setShowCreateModal, defaultTab = 'ev
                           </div>
                         </div>
                       </div>
+                    </div>
                       
                       {/* Actions */}
                       <div className="ml-4 flex items-center space-x-3">
@@ -214,6 +236,26 @@ const AdminEventsPage = ({ showCreateModal, setShowCreateModal, defaultTab = 'ev
                         >
                           View Details
                         </button>
+                        {event.googleFormUrl ? (
+                          <a
+                            href={event.googleFormUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-600 hover:text-purple-900 text-sm font-medium flex items-center"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Open Form
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => setShowComingSoonModal(true)}
+                            className="text-purple-600 hover:text-purple-900 text-sm font-medium"
+                          >
+                            Enter
+                          </button>
+                        )}
                         <button
                           onClick={() => handleToggleLandingPage(event.id, event.showOnLandingPage)}
                           className={`text-sm font-medium ${
@@ -275,6 +317,31 @@ const AdminEventsPage = ({ showCreateModal, setShowCreateModal, defaultTab = 'ev
           onClose={() => setSelectedEvent(null)}
           onUpdate={(updates) => handleUpdateEvent(selectedEvent.id, updates)}
         />
+      )}
+
+      {/* Coming Soon Modal */}
+      {showComingSoonModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 mb-4">
+                <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Sign-up Form Coming Soon!</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                The registration form for this event is being set up. Check back later!
+              </p>
+              <button
+                onClick={() => setShowComingSoonModal(false)}
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:text-sm"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -8,7 +8,6 @@ import AdminCalendarPage from '../pages/AdminCalendarPage';
 import AdminPartnersPage from '../pages/AdminPartnersPage';
 import BracketManagementPage from '../pages/BracketManagementPage';
 import SalesPipelinePage from '../pages/SalesPipelinePage';
-import AdminMapPage from '../pages/AdminMapPage';
 import { AdminLevel, signOut } from '../firebase/auth';
 
 const AdminLayout = ({ adminLevel }) => {
@@ -21,6 +20,7 @@ const AdminLayout = ({ adminLevel }) => {
   };
 
   const isActive = (path) => {
+    if (!path) return 'text-gray-300 hover:bg-gray-700 hover:text-white';
     return location.pathname.includes(path) 
       ? 'bg-gray-900 text-white' 
       : 'text-gray-300 hover:bg-gray-700 hover:text-white';
@@ -43,15 +43,6 @@ const AdminLayout = ({ adminLevel }) => {
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    { 
-      name: 'College Map', 
-      path: '/admin/map',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
         </svg>
       )
     },
@@ -127,7 +118,7 @@ const AdminLayout = ({ adminLevel }) => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Left Sidebar */}
-      <div className="w-64 bg-gray-800">
+      <div className="w-64 bg-gray-800 relative z-50">
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-center h-16 bg-gray-900">
@@ -137,7 +128,7 @@ const AdminLayout = ({ adminLevel }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto relative z-50">
             {menuItems.map((item, itemIdx) => {
               // Skip admin-only items for non-super admins
               if (item.adminOnly && adminLevel !== AdminLevel.SUPER) {
@@ -149,11 +140,12 @@ const AdminLayout = ({ adminLevel }) => {
                   <button
                     key={itemIdx}
                     onClick={item.action}
-                    className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
+                    className={`relative z-50 w-full group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
                       item.primary 
                         ? 'bg-blue-600 text-white hover:bg-blue-700' 
                         : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                     }`}
+                    style={{ position: 'relative' }}
                   >
                     {item.icon}
                     <span className="ml-3">{item.name}</span>
@@ -185,7 +177,8 @@ const AdminLayout = ({ adminLevel }) => {
                 <Link
                   key={itemIdx}
                   to={item.path}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${isActive(item.path)}`}
+                  className={`relative z-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md ${isActive(item.path)}`}
+                  style={{ position: 'relative' }}
                 >
                   {item.icon}
                   <span className="ml-3">{item.name}</span>
@@ -210,9 +203,9 @@ const AdminLayout = ({ adminLevel }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="bg-white shadow">
+        <header className="bg-white shadow relative z-10 flex-shrink-0">
           <div className="px-4 sm:px-6 lg:px-8 py-4">
             <h1 className="text-2xl font-semibold text-gray-900">
               {location.pathname.includes('events') ? 'Event Management' :
@@ -230,7 +223,7 @@ const AdminLayout = ({ adminLevel }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-gray-100">
           <Routes>
             {/* Common routes */}
             <Route path="events" element={<AdminEventsPage adminLevel={adminLevel} showCreateModal={showCreateEventModal} setShowCreateModal={setShowCreateEventModal} />} />
@@ -238,7 +231,6 @@ const AdminLayout = ({ adminLevel }) => {
             <Route path="brackets" element={<BracketManagementPage />} />
             <Route path="partners" element={<AdminPartnersPage />} />
             <Route path="sales" element={<SalesPipelinePage />} />
-            <Route path="map" element={<AdminMapPage />} />
             
             {/* Super admin only routes */}
             {adminLevel === AdminLevel.SUPER && (

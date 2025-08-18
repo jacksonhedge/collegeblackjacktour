@@ -19,6 +19,7 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
     date: '',
     time: '',
     location: '',
+    state: '', // Add state field
     registrationPassword: '',
     googleFormUrl: '',
     maxParticipants: 100,
@@ -33,6 +34,7 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
     showOnLandingPage: false,
     status: 'upcoming',
     backgroundImage: '',
+    collegeLogo: '', // Add college logo field
     ...initialData
   });
 
@@ -138,6 +140,25 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCollegeLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `college-logos/${Date.now()}-${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setFormData(prev => ({ ...prev, collegeLogo: downloadURL }));
+    } catch (error) {
+      console.error('Error uploading college logo:', error);
+      alert('Failed to upload college logo. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -280,7 +301,7 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
                 />
               </div>
 
-              <div className="col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Location
                 </label>
@@ -292,6 +313,39 @@ const EventCreationModal = ({ onClose, onSave, initialData = {} }) => {
                   placeholder="e.g., Sigma Nu House, 123 College Ave"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  State (2-Letter Code)
+                </label>
+                <input
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  placeholder="e.g., MD, VA, PA"
+                  maxLength="2"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 uppercase"
+                />
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  College Logo
+                </label>
+                <div className="mt-1 flex items-center space-x-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCollegeLogoUpload}
+                    className="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  {formData.collegeLogo && (
+                    <img src={formData.collegeLogo} alt="College Logo" className="h-10 w-10 object-contain rounded" />
+                  )}
+                  {uploading && <span className="text-sm text-gray-500">Uploading...</span>}
+                </div>
               </div>
             </div>
           </div>
